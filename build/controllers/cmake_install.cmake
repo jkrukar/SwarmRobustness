@@ -1,4 +1,4 @@
-# Install script for directory: /home/john/Documents/argos3-examples/controllers
+# Install script for directory: /home/john/Documents/SwarmRobustness/controllers
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
     string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
            CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
   else()
-    set(CMAKE_INSTALL_CONFIG_NAME "")
+    set(CMAKE_INSTALL_CONFIG_NAME "Debug")
   endif()
   message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 endif()
@@ -34,17 +34,17 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/john/Documents/argos3-examples/build/controllers/footbot_diffusion/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/footbot_synchronization/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/footbot_flocking/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/footbot_gripping/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/footbot_foraging/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/footbot_manualcontrol/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/footbot_nn/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/eyebot_circle/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/eyebot_flocking/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/epuck_mapping/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/controllers/epuck_brownian/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/footbot_diffusion/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/footbot_synchronization/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/footbot_flocking/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/footbot_gripping/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/footbot_foraging/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/footbot_manualcontrol/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/footbot_nn/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/eyebot_circle/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/eyebot_flocking/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/epuck_mapping/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/epuck_brownian/cmake_install.cmake")
 
 endif()
 

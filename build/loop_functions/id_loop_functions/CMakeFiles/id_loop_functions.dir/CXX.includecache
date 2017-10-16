@@ -6,13 +6,13 @@
 
 #IncludeRegexTransform: 
 
-/home/john/Documents/argos3-examples/build/loop_functions/id_loop_functions/id_loop_functions_automoc.cpp
+/home/john/Documents/SwarmRobustness/build/loop_functions/id_loop_functions/id_loop_functions_automoc.cpp
 
-/home/john/Documents/argos3-examples/loop_functions/id_loop_functions/id_qtuser_functions.cpp
+/home/john/Documents/SwarmRobustness/loop_functions/id_loop_functions/id_qtuser_functions.cpp
 id_qtuser_functions.h
-/home/john/Documents/argos3-examples/loop_functions/id_loop_functions/id_qtuser_functions.h
+/home/john/Documents/SwarmRobustness/loop_functions/id_loop_functions/id_qtuser_functions.h
 
-/home/john/Documents/argos3-examples/loop_functions/id_loop_functions/id_qtuser_functions.h
+/home/john/Documents/SwarmRobustness/loop_functions/id_loop_functions/id_qtuser_functions.h
 argos3/plugins/simulator/visualizations/qt-opengl/qtopengl_user_functions.h
 -
 argos3/plugins/robots/foot-bot/simulator/footbot_entity.h

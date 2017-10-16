@@ -1,4 +1,4 @@
-# Install script for directory: /home/john/Documents/argos3-examples
+# Install script for directory: /home/john/Documents/SwarmRobustness
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
     string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
            CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
   else()
-    set(CMAKE_INSTALL_CONFIG_NAME "")
+    set(CMAKE_INSTALL_CONFIG_NAME "Debug")
   endif()
   message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 endif()
@@ -34,9 +34,9 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/john/Documents/argos3-examples/build/controllers/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/loop_functions/cmake_install.cmake")
-  include("/home/john/Documents/argos3-examples/build/embedding/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/controllers/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/loop_functions/cmake_install.cmake")
+  include("/home/john/Documents/SwarmRobustness/build/embedding/cmake_install.cmake")
 
 endif()
 
@@ -48,5 +48,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/john/Documents/argos3-examples/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/john/Documents/SwarmRobustness/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

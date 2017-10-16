@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/john/Documents/argos3-examples
+CMAKE_SOURCE_DIR = /home/john/Documents/SwarmRobustness
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/john/Documents/argos3-examples/build
+CMAKE_BINARY_DIR = /home/john/Documents/SwarmRobustness/build
 
 # Utility rule file for eyebot_circle_automoc.
 
@@ -54,8 +54,8 @@ CMAKE_BINARY_DIR = /home/john/Documents/argos3-examples/build
 include controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/progress.make
 
 controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/john/Documents/argos3-examples/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic moc for target eyebot_circle"
-	cd /home/john/Documents/argos3-examples/build/controllers/eyebot_circle && /usr/bin/cmake -E cmake_autogen /home/john/Documents/argos3-examples/build/controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/ ""
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/john/Documents/SwarmRobustness/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic moc for target eyebot_circle"
+	cd /home/john/Documents/SwarmRobustness/build/controllers/eyebot_circle && /usr/bin/cmake -E cmake_autogen /home/john/Documents/SwarmRobustness/build/controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/ Debug
 
 eyebot_circle_automoc: controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc
 eyebot_circle_automoc: controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/build.make
@@ -68,10 +68,10 @@ controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/build: eyebot_cir
 .PHONY : controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/build
 
 controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/clean:
-	cd /home/john/Documents/argos3-examples/build/controllers/eyebot_circle && $(CMAKE_COMMAND) -P CMakeFiles/eyebot_circle_automoc.dir/cmake_clean.cmake
+	cd /home/john/Documents/SwarmRobustness/build/controllers/eyebot_circle && $(CMAKE_COMMAND) -P CMakeFiles/eyebot_circle_automoc.dir/cmake_clean.cmake
 .PHONY : controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/clean
 
 controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/depend:
-	cd /home/john/Documents/argos3-examples/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/john/Documents/argos3-examples /home/john/Documents/argos3-examples/controllers/eyebot_circle /home/john/Documents/argos3-examples/build /home/john/Documents/argos3-examples/build/controllers/eyebot_circle /home/john/Documents/argos3-examples/build/controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/john/Documents/SwarmRobustness/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/john/Documents/SwarmRobustness /home/john/Documents/SwarmRobustness/controllers/eyebot_circle /home/john/Documents/SwarmRobustness/build /home/john/Documents/SwarmRobustness/build/controllers/eyebot_circle /home/john/Documents/SwarmRobustness/build/controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : controllers/eyebot_circle/CMakeFiles/eyebot_circle_automoc.dir/depend
 

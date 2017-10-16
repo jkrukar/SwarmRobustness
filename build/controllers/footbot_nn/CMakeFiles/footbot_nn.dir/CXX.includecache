@@ -6,13 +6,13 @@
 
 #IncludeRegexTransform: 
 
-/home/john/Documents/argos3-examples/build/controllers/footbot_nn/footbot_nn_automoc.cpp
+/home/john/Documents/SwarmRobustness/build/controllers/footbot_nn/footbot_nn_automoc.cpp
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/footbot_nn_controller.cpp
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/footbot_nn_controller.cpp
 footbot_nn_controller.h
-/home/john/Documents/argos3-examples/controllers/footbot_nn/footbot_nn_controller.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/footbot_nn_controller.h
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/footbot_nn_controller.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/footbot_nn_controller.h
 argos3/core/control_interface/ci_controller.h
 -
 argos3/plugins/robots/generic/control_interface/ci_differential_steering_actuator.h
@@ -22,11 +22,11 @@ argos3/plugins/robots/foot-bot/control_interface/ci_footbot_proximity_sensor.h
 argos3/plugins/robots/foot-bot/control_interface/ci_footbot_light_sensor.h
 -
 nn/perceptron.h
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/perceptron.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/perceptron.h
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/ctrnn_multilayer.cpp
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/ctrnn_multilayer.cpp
 ctrnn_multilayer.h
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/ctrnn_multilayer.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/ctrnn_multilayer.h
 cmath
 -
 fstream
@@ -34,31 +34,31 @@ fstream
 argos3/core/utility/string_utilities.h
 -
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/ctrnn_multilayer.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/ctrnn_multilayer.h
 neural_network.h
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/neural_network.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/neural_network.h
 argos3/core/utility/math/range.h
 -
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/neural_network.cpp
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/neural_network.cpp
 neural_network.h
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/neural_network.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/neural_network.h
 argos3/core/utility/string_utilities.h
 -
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/neural_network.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/neural_network.h
 argos3/core/control_interface/ci_controller.h
 -
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/perceptron.cpp
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/perceptron.cpp
 perceptron.h
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/perceptron.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/perceptron.h
 fstream
 -
 cmath
 -
 
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/perceptron.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/perceptron.h
 neural_network.h
-/home/john/Documents/argos3-examples/controllers/footbot_nn/nn/neural_network.h
+/home/john/Documents/SwarmRobustness/controllers/footbot_nn/nn/neural_network.h
 

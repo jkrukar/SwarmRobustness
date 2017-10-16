@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(argos3_examples)
+project(SwarmRobustness)
 
 if(APPLE)
   # Add address sanitizer support for CLang

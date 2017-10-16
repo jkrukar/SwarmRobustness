@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/john/Documents/argos3-examples
+CMAKE_SOURCE_DIR = /home/john/Documents/SwarmRobustness
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/john/Documents/argos3-examples/build
+CMAKE_BINARY_DIR = /home/john/Documents/SwarmRobustness/build
 
 # Utility rule file for epuck_mapping_automoc.
 
@@ -54,8 +54,8 @@ CMAKE_BINARY_DIR = /home/john/Documents/argos3-examples/build
 include controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/progress.make
 
 controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/john/Documents/argos3-examples/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic moc for target epuck_mapping"
-	cd /home/john/Documents/argos3-examples/build/controllers/epuck_mapping && /usr/bin/cmake -E cmake_autogen /home/john/Documents/argos3-examples/build/controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/ ""
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/john/Documents/SwarmRobustness/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic moc for target epuck_mapping"
+	cd /home/john/Documents/SwarmRobustness/build/controllers/epuck_mapping && /usr/bin/cmake -E cmake_autogen /home/john/Documents/SwarmRobustness/build/controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/ Debug
 
 epuck_mapping_automoc: controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc
 epuck_mapping_automoc: controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/build.make
@@ -68,10 +68,10 @@ controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/build: epuck_mapp
 .PHONY : controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/build
 
 controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/clean:
-	cd /home/john/Documents/argos3-examples/build/controllers/epuck_mapping && $(CMAKE_COMMAND) -P CMakeFiles/epuck_mapping_automoc.dir/cmake_clean.cmake
+	cd /home/john/Documents/SwarmRobustness/build/controllers/epuck_mapping && $(CMAKE_COMMAND) -P CMakeFiles/epuck_mapping_automoc.dir/cmake_clean.cmake
 .PHONY : controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/clean
 
 controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/depend:
-	cd /home/john/Documents/argos3-examples/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/john/Documents/argos3-examples /home/john/Documents/argos3-examples/controllers/epuck_mapping /home/john/Documents/argos3-examples/build /home/john/Documents/argos3-examples/build/controllers/epuck_mapping /home/john/Documents/argos3-examples/build/controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/john/Documents/SwarmRobustness/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/john/Documents/SwarmRobustness /home/john/Documents/SwarmRobustness/controllers/epuck_mapping /home/john/Documents/SwarmRobustness/build /home/john/Documents/SwarmRobustness/build/controllers/epuck_mapping /home/john/Documents/SwarmRobustness/build/controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : controllers/epuck_mapping/CMakeFiles/epuck_mapping_automoc.dir/depend
 
