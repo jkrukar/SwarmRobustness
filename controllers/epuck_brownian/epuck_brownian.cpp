@@ -3,6 +3,7 @@
 /* Function definitions for XML parsing */
 #include <argos3/core/utility/configuration/argos_configuration.h>
 #include <argos3/core/utility/logging/argos_log.h>
+#include <cmath>
 
 /****************************************/
 /****************************************/
@@ -60,6 +61,55 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
 }
 
 /****************************************/
+/* Averages the range and bearing sensor readings and outputs the average angle in radians.
+    The average angle is the angle towards the center of the swarm relative to the sensors orientation.*/
+/****************************************/
+float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
+
+  float averageRadians = 0;
+
+  //Get average of range and bearing sensor readings
+  argos::CCI_RangeAndBearingSensor::TReadings rabReadings = m_pcRABSens->GetReadings();
+  int rabReadingCount = rabReadings.size();
+  float nextReading = 0;
+  float nextAngle = 0;
+  float sinMean = 0;
+  float cosMean = 0;
+
+  for(int i=0;i<rabReadingCount;i++){
+
+    nextReading = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
+
+    /*Add sin and cos values of the angle to the sin and cos total.*/
+    sinMean += sin(nextReading);
+    cosMean += cos(nextReading);
+  }
+
+  /*Divide the sin and cos total by the number of readings to get the average*/
+  sinMean /= rabReadingCount;
+  cosMean /= rabReadingCount;
+
+  /*Convert to degrees for atan()*/
+  sinMean = sinMean*M_PI/180;
+  cosMean = cosMean*M_PI/180;
+
+  /*Take the arctangent to get the mean angle*/
+  averageRadians = atan(sinMean/cosMean);
+
+  if(cosMean < 0){
+    averageRadians += M_PI;
+  }else if(sinMean < 0){
+    averageRadians += M_PI*2;
+  }
+
+  /*TODO: Remove eventually. Left in for debugging/demonstration purposes*/
+  float averageAngle = averageRadians*180/M_PI;
+  argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
+
+  return averageRadians;
+}
+
+/****************************************/
 /****************************************/
 
 void CEPuckbrownian::ControlStep() {
@@ -108,11 +158,16 @@ void CEPuckbrownian::ControlStep() {
 
    //Mapping
    //Record our current location into some data structure
-   // float x= m_pcPosSens->GetReading().Position.GetX();
-   // float y= m_pcPosSens->GetReading().Position.GetY();
-   // // float distanceToGoalX = x-goalX;
-   // // float distanceToGoalY = y-goalY;
-   // argos::LOG << "<" << x << "," << y << ">" << std::endl;
+   float x= m_pcPosSens->GetReading().Position.GetX();
+   float y= m_pcPosSens->GetReading().Position.GetY();
+   
+   std::string id = this->GetId(); //Get id so that we can limit the log output to individual robots
+
+   if(id=="fb0"){
+      // argos::LOG << "pos: <" << x << "," << y << ">" << std::endl;
+      getRadiansToSwarmCenter(m_pcRABSens);
+   }
+
 }
 
 /****************************************/
