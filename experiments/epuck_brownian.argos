@@ -28,11 +28,12 @@
             pos_noise_range="-0.1:0.2"
             angle_noise_range="-10.5:13.7"
             axis_noise_range="-0.3:0.4"/>
+        <range_and_bearing implementation="medium" medium="rab" show_rays="true" />
+        <eyebot_light implementation="rot_z_only" show_rays="true" />
       </sensors>
       <params velocity="5" />
     </epuck_brownian_controller>
-
-  </controllers>
+ess  </controllers>
 
   <!-- *********************** -->
   <!-- * Arena configuration * -->
@@ -56,7 +57,7 @@
            position="0,-3,0.1"
            orientation="0,0,0"
            color="red"
-           intensity="3.0"
+           intensity="1"
            medium="leds" />
 
     <!--
@@ -92,6 +93,7 @@
   <!-- * Media * -->
   <!-- ********* -->
   <media>
+    <range_and_bearing id="rab" />
     <led id="leds" />
   </media>
 
