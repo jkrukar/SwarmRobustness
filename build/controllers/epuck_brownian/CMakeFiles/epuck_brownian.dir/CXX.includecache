@@ -25,4 +25,8 @@ argos3/plugins/robots/generic/control_interface/ci_proximity_sensor.h
 -
 argos3/plugins/robots/generic/control_interface/ci_positioning_sensor.h
 -
+argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h
+-
+argos3/plugins/robots/eye-bot/control_interface/ci_eyebot_light_sensor.h
+-
 

@@ -10,7 +10,11 @@
 CEPuckbrownian::CEPuckbrownian() :
    m_pcWheels(NULL),
    m_pcProximity(NULL),
+   m_pcRABSens(NULL),
+   m_pcLightSens(NULL),
+   m_pcPosSens(NULL),
    m_fWheelVelocity(2.5f) {}
+   
 
 /****************************************/
 /****************************************/
@@ -41,6 +45,9 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
    m_pcWheels    = GetActuator<CCI_DifferentialSteeringActuator>("differential_steering");
    m_pcProximity = GetSensor  <CCI_ProximitySensor             >("proximity"    );
    m_pcPosSens = GetSensor  <CCI_PositioningSensor             >("positioning"    );
+   m_pcRABSens   = GetSensor  <CCI_RangeAndBearingSensor    >("range_and_bearing" );
+   m_pcLightSens = GetSensor  <CCI_EyeBotLightSensor        >("eyebot_light"      );
+
 
    /*
     * Parse the configuration file
