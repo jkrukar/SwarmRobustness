@@ -72,7 +72,6 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
   argos::CCI_RangeAndBearingSensor::TReadings rabReadings = m_pcRABSens->GetReadings();
   int rabReadingCount = rabReadings.size();
   float nextReading = 0;
-  float nextAngle = 0;
   float sinMean = 0;
   float cosMean = 0;
 
