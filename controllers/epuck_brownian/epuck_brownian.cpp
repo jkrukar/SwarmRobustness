@@ -107,6 +107,30 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
 
   return averageRadians;
 }
+//*****************************************/
+/*  Flocking for long range attraction    */
+/* Still need to implement short range    */
+//****************************************/
+void flocking(float obstacle_avoidance_timer)
+{
+  /* Debugging */
+  argos::LOG << "Time since last object was avoided = " << obstacle_avoidance_timer << "'" << std::endl;
+  
+  float threshold = 2.5; //controls overall swarm density, article says to set to 2.5
+  
+  float number_of_robots = 10;//robots in the simulation
+  
+  float coherence = 0;
+  
+  coherence = number_of_robots * obstacle_avoidance_timer;
+  
+   /* Turn the robot towards center of swarm  */
+   if( coherence > threshold)
+    {
+      /* make a call to a function that will find the swarm and turn the angle of the epuck */
+    }
+  
+}
 
 /****************************************/
 /****************************************/
@@ -117,6 +141,8 @@ void CEPuckbrownian::ControlStep() {
    /* Get the highest reading in front of the robot, which corresponds to the closest object */
    Real fMaxReadVal = m_pcProximity->GetReadings()[0];
    UInt32 unMaxReadIdx = 0;
+  
+   
    if(fMaxReadVal < m_pcProximity->GetReadings()[1]) {
       fMaxReadVal = m_pcProximity->GetReadings()[1];
       unMaxReadIdx = 1;
@@ -131,18 +157,25 @@ void CEPuckbrownian::ControlStep() {
    }
    /* Do we have an obstacle in front? */
    if(fMaxReadVal > 0.0f) {
+     obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
      /* Yes, we do: avoid it */
      if(unMaxReadIdx == 0 || unMaxReadIdx == 1) {
        /* The obstacle is on the left, turn right */
        m_pcWheels->SetLinearVelocity(m_fWheelVelocity, 0.0f);
+       
      }
      else {
        /* The obstacle is on the left, turn right */
        m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
      }
    }
+
+  
    else {
-     /* No, we don't: go straight */
+     obstacleAvoidance_timer++; // time since last obstacle avoidance
+     /* flocking will return a coherence value that will be use to turn the angle of the swarm */
+     flocking(obstacleAvoidance_timer);
+     /* Go straight after pointing in the directiong of the swarm */ 
       m_pcWheels->SetLinearVelocity(m_fWheelVelocity, m_fWheelVelocity);
    }
 
@@ -169,8 +202,8 @@ void CEPuckbrownian::ControlStep() {
 
 }
 
-/****************************************/
-/****************************************/
+//****************************************/
+//****************************************/
 
 /*
  * This statement notifies ARGoS of the existence of the controller.
