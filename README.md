@@ -25,7 +25,7 @@ See paper.
 
 ## Installation
 1. Download files to a location of your choice from:
-GitHub: https://github.com/akilandrews/SWARM_Robotics_PID_Controller.git
+GitHub: https://github.com/jkrukar/SwarmRobustness.git
 2. Compile code?
 
 
