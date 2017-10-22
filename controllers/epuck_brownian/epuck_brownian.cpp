@@ -4,6 +4,7 @@
 #include <argos3/core/utility/configuration/argos_configuration.h>
 #include <argos3/core/utility/logging/argos_log.h>
 #include <cmath>
+#include<bits/stdc++.h>
 
 /****************************************/
 /****************************************/
@@ -103,38 +104,48 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
 
   /*TODO: Remove eventually. Left in for debugging/demonstration purposes*/
   float averageAngle = averageRadians*180/M_PI;
-  argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
+  
+  //argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
 
   return averageRadians;
 }
-//*****************************************/
-/*  Flocking for long range attraction    */
-/* Still need to implement short range    */
-//****************************************/
-void flocking(float obstacle_avoidance_timer)
+//**********************************************************************************/
+/*                  Flocking long-range attraction(steering/cohesion)              */
+/*   Parameters@                                                                   */
+/*   obstacle_avoidance_timer = time between each obstacle encounter               */
+/*   m_pcRABSens = Check Documentation                                             */
+/*   m_pcWheels controls the velocity of the epucks                                */
+/*   current_X,current_y = current x and y position                                */
+//**********************************************************************************/
+void flocking_long_range(float obstacle_avoidance_timer,CCI_RangeAndBearingSensor* m_pcRABSens,     
+              CCI_DifferentialSteeringActuator* m_pcWheels,float current_x,float current_y)
 {
-  /* Debugging */
-  argos::LOG << "Time since last object was avoided = " << obstacle_avoidance_timer << "'" << std::endl;
+
   
   float threshold = 2.5; //controls overall swarm density, article says to set to 2.5
-  
-  float number_of_robots = 10;//robots in the simulation
-  
-  float coherence = 0;
+  float number_of_robots = 2;//robots in the simulation
+  float coherence = 0;// the 'w' variable from the w-algorithm
+
+  float swarm_x = cos(getRadiansToSwarmCenter(m_pcRABSens)); // get the x coordinate of the swarm
+  float swarm_y = sin(getRadiansToSwarmCenter(m_pcRABSens)); // get the  y coordinate of the swarm
+
+  float desired_x_position = swarm_x - current_x;
+  float desired_y_position = swarm_y - current_y;
+
+  float right_wheelVelocity = desired_x_position - 2.0f;  // set to 2.0f for testing purposes, should be current velocity of the "lead" epuck in the swarm
+  float left_Wheelveloctiy = desired_y_position - 2.0f;  //
   
   coherence = number_of_robots * obstacle_avoidance_timer;
-  
+              
    /* Turn the robot towards center of swarm  */
    if( coherence > threshold)
     {
-      /* make a call to a function that will find the swarm and turn the angle of the epuck */
+       m_pcWheels->SetLinearVelocity(right_wheelVelocity, left_Wheelveloctiy);
     }
-  
 }
 
-/****************************************/
-/****************************************/
-
+/*********************************************************************************************/
+/*********************************************************************************************/
 void CEPuckbrownian::ControlStep() {
 
     timerToTurn++;
@@ -173,37 +184,42 @@ void CEPuckbrownian::ControlStep() {
   
    else {
      obstacleAvoidance_timer++; // time since last obstacle avoidance
-     /* flocking will return a coherence value that will be use to turn the angle of the swarm */
-     flocking(obstacleAvoidance_timer);
-     /* Go straight after pointing in the directiong of the swarm */ 
-      m_pcWheels->SetLinearVelocity(m_fWheelVelocity, m_fWheelVelocity);
+     /* Go towards goal */ 
+     // m_pcWheels->SetLinearVelocity(3.0f, 3.0f);
+      
    }
+  
+/***********************************************************************************************/
+/* The code below is for testing purposes only, currently im working with two epucks trying    */
+/*  to get "fb1" to follow "fbo" from the flocking functionabove.                             */ 
+/**********************************************************************************************/ 
+  float x= m_pcPosSens->GetReading().Position.GetX();
+  float y= m_pcPosSens->GetReading().Position.GetY();
 
-   if(timerToTurn == 100){
-    timerToTurn = 0;
-    double random = rand();
-    int rightWheelVelocity = m_fWheelVelocity * random;
-    int leftWheelVelocity = m_fWheelVelocity;
-    m_pcWheels->SetLinearVelocity(leftWheelVelocity, rightWheelVelocity);
-
-  }
-
-   //Mapping
-   //Record our current location into some data structure
-   float x= m_pcPosSens->GetReading().Position.GetX();
-   float y= m_pcPosSens->GetReading().Position.GetY();
-   
-   std::string id = this->GetId(); //Get id so that we can limit the log output to individual robots
-
-   if(id=="fb0"){
-      // argos::LOG << "pos: <" << x << "," << y << ">" << std::endl;
-      getRadiansToSwarmCenter(m_pcRABSens);
-   }
+  std::string id = this->GetId(); //Get id so that we can limit the log output to individual robots
+  std::string robots[2] = {id}; /* Number of epucks */  
+       
+                       
+  //loop through each epuck
+  for(int i = 0; i < 2; i++)
+     {  
+         // Make the first epuck head in some direction simulating if it were heading to a goal
+         if(robots[i] == "fb0")
+         {
+            m_pcWheels->SetLinearVelocity(2.0f,2.0f);
+            //argos::LOG << "averageAngle = " << getRadiansToSwarmCenter(m_pcRABSens) << "'" << std::endl;     
+         }   
+         // Call flocking function for the second epuck to make it follow
+         if(robots[i] == "fb1")
+         {
+            flocking_long_range(obstacleAvoidance_timer,m_pcRABSens,m_pcWheels,x,y);        
+            argos::LOG << "averageAngle = " << getRadiansToSwarmCenter(m_pcRABSens) << "'" << std::endl;     
+         }   
+     }
 
 }
-
-//****************************************/
-//****************************************/
+/***********************************************************************************************/
+/**********************************************************************************************/
 
 /*
  * This statement notifies ARGoS of the existence of the controller.
