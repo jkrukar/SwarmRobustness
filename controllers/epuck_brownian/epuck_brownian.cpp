@@ -115,15 +115,16 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
 /*   obstacle_avoidance_timer = time between each obstacle encounter               */
 /*   m_pcRABSens = Check Documentation                                             */
 /*   m_pcWheels controls the velocity of the epucks                                */
-/*   current_X,current_y = current x and y position                                */
+/*   current_X,current_y = current x and y position of epuck                       */
+/*   swarm_rightWheelVelocity,swarm_leftWheelVelocity = swarms current velocity    */
 //**********************************************************************************/
 void flocking_long_range(float obstacle_avoidance_timer,CCI_RangeAndBearingSensor* m_pcRABSens,     
-              CCI_DifferentialSteeringActuator* m_pcWheels,float current_x,float current_y)
+              CCI_DifferentialSteeringActuator* m_pcWheels,float current_x,float current_y,float swarm_rightWheelVelocity,float swarm_leftWheelVelocity)
 {
 
   
-  float threshold = 2.5; //controls overall swarm density, article says to set to 2.5
-  float number_of_robots = 2;//robots in the simulation
+  float threshold = 2.5; //controls overall swarm density, article  sets to 2.5
+  float number_of_robots = 3;//robots in the simulation
   float coherence = 0;// the 'w' variable from the w-algorithm
 
   float swarm_x = cos(getRadiansToSwarmCenter(m_pcRABSens)); // get the x coordinate of the swarm
@@ -132,15 +133,15 @@ void flocking_long_range(float obstacle_avoidance_timer,CCI_RangeAndBearingSenso
   float desired_x_position = swarm_x - current_x;
   float desired_y_position = swarm_y - current_y;
 
-  float right_wheelVelocity = desired_x_position - 2.0f;  // set to 2.0f for testing purposes, should be current velocity of the "lead" epuck in the swarm
-  float left_Wheelveloctiy = desired_y_position - 2.0f;  //
+  float right_wheelVelocity = desired_x_position - swarm_rightWheelVelocity;  // set to 2.0f for testing purposes, should be current velocity of the "lead" epuck in the swarm
+  float left_Wheelveloctiy = desired_y_position - swarm_leftWheelVelocity;  //
   
   coherence = number_of_robots * obstacle_avoidance_timer;
               
    /* Turn the robot towards center of swarm  */
    if( coherence > threshold)
     {
-       m_pcWheels->SetLinearVelocity(right_wheelVelocity, left_Wheelveloctiy);
+       m_pcWheels->SetLinearVelocity(right_wheelVelocity*2, left_Wheelveloctiy*2); // Multiplied by 2 so the epucks will accelerate faster to get to swarm */
     }
 }
 
@@ -196,6 +197,10 @@ void CEPuckbrownian::ControlStep() {
   float x= m_pcPosSens->GetReading().Position.GetX();
   float y= m_pcPosSens->GetReading().Position.GetY();
 
+  double random = rand() % 2;
+  float rightWheelVelocity = m_fWheelVelocity * random;
+  float leftWheelVelocity = m_fWheelVelocity * random;
+
   std::string id = this->GetId(); //Get id so that we can limit the log output to individual robots
   std::string robots[2] = {id}; /* Number of epucks */  
        
@@ -203,16 +208,20 @@ void CEPuckbrownian::ControlStep() {
   //loop through each epuck
   for(int i = 0; i < 2; i++)
      {  
-         // Make the first epuck head in some direction simulating if it were heading to a goal
+         // Make the first epuck head in some random direction simulating if it were heading to a goal
          if(robots[i] == "fb0")
          {
-            m_pcWheels->SetLinearVelocity(2.0f,2.0f);
-            //argos::LOG << "averageAngle = " << getRadiansToSwarmCenter(m_pcRABSens) << "'" << std::endl;     
+               if(timerToTurn == 100)
+               {
+                 timerToTurn = 0;
+                 m_pcWheels->SetLinearVelocity(rightWheelVelocity,leftWheelVelocity);
+               }
+   
          }   
-         // Call flocking function for the second epuck to make it follow
-         if(robots[i] == "fb1")
+         // Call flocking function to make other epucks "swarm"
+        else
          {
-            flocking_long_range(obstacleAvoidance_timer,m_pcRABSens,m_pcWheels,x,y);        
+            flocking_long_range(obstacleAvoidance_timer,m_pcRABSens,m_pcWheels,x,y,rightWheelVelocity,leftWheelVelocity);        
             argos::LOG << "averageAngle = " << getRadiansToSwarmCenter(m_pcRABSens) << "'" << std::endl;     
          }   
      }
