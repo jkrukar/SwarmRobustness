@@ -82,7 +82,7 @@
           -Closest 2 robots will always be in the middle 2 rows and the first column.
           -Layout needs to be changed for different experiments: layout="rows,columns,1"
             -Ex: 10 robots, layout="2,5,1"
-    
+    -->
     <distribute>
       <position method="grid" center="0,2,0" distances="0.2,0.2,0" layout="2,5,1" />
       <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
@@ -93,55 +93,7 @@
       </entity>
     </distribute>
   
- <distribute>
-      <position method="uniform" min="4,4,0" max="5,5,0" />
-      <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
-      <entity quantity="10" max_trials="100">
-        <e-puck id="fb" omnidirectional_camera_aperture="80">
-          <controller config="fdc" />
-        </e-puck>
-      </entity>
-    </distribute>
 
- <foot-bot id="fb0" omnidirectional_camera_aperture="80">
-        <body position="1.1,2.5,0" orientation="0,0,0" />
-        <controller config="fdc" />
-    </foot-bot>
-    
-    <foot-bot id="fb1" omnidirectional_camera_aperture="80">
-        <body position="2.4,3.7,0" orientation="0,0,0" />
-        <controller config="fdc" />
-    </foot-bot>
-    
-    <foot-bot id="fb2" omnidirectional_camera_aperture="80">
-        <body position="2.3,1.3,0" orientation="0,0,0"/>
-        <controller config="fdc" />
-    </foot-bot>
-    
-    <foot-bot id="fb3" omnidirectional_camera_aperture="80">
-        <body position="3.5,2.4,0" orientation="0,0,0" />
-        <controller config="fdc" />
-    </foot-bot>
-
- <distribute>
-      <position method="uniform" min="4,4,0" max="5,5,0" />
-      <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
-      <entity quantity="10" max_trials="100">
-        <e-puck id="fb" omnidirectional_camera_aperture="80">
-          <controller config="fdc" />
-        </e-puck>
-      </entity>
-    </distribute>
--->
-<distribute>
-      <position method="grid" center="0,2,0" distances="0.2,0.2,0" layout="2,5,1" />
-      <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
-      <entity quantity="10" max_trials="100">
-        <e-puck id="fb" omnidirectional_camera_aperture="80">
-          <controller config="ffc" />
-        </e-puck>
-      </entity>
-    </distribute>
 
 
   </arena>
