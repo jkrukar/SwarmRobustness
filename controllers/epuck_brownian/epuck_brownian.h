@@ -28,11 +28,14 @@
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h>
 /* Definition of the eye-bot light sensor */
 #include <argos3/plugins/robots/eye-bot/control_interface/ci_eyebot_light_sensor.h>
+/* Definition of the LEDs actuator */
+#include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
+/* Definition of the omnidirectional camera sensor */
+#include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_omnidirectional_camera_sensor.h>
+#include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
+/* Definition of the omnidirectional camera sensor */
+#include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_omnidirectional_camera_sensor.h>
 
-/*
- * All the ARGoS stuff in the 'argos' namespace.
- * With this statement, you save typing argos:: every time.
- */
 using namespace argos;
 
 /*
@@ -41,7 +44,49 @@ using namespace argos;
 class CEPuckbrownian : public CCI_Controller {
 
 public:
+/*
+    * The following variables are used as parameters for
+    * turning during navigation. You can set their value
+    * in the <parameters> section of the XML configuration
+    * file, under the
+    * <controllers><footbot_flocking_controller><parameters><wheel_turning>
+    * section.
+    */
+   struct SWheelTurningParams {
+      /*
+       * The turning mechanism.
+       * The robot can be in three different turning states.
+       */
+      enum ETurningMechanism
+      {
+         NO_TURN = 0, // go straight
+         SOFT_TURN,   // both wheels are turning forwards, but at different speeds
+         HARD_TURN    // wheels are turning with opposite speeds
+      } TurningMechanism;
+      /*
+       * Angular thresholds to change turning state.
+       */
+      CRadians HardTurnOnAngleThreshold;/* Definition of the LEDs actuator */
 
+      CRadians SoftTurnOnAngleThreshold;
+      CRadians NoTurnAngleThreshold;
+      /* Maximum wheel speed */
+      Real MaxSpeed;
+
+      void Init(TConfigurationNode& t_tree);
+   };
+
+ struct SFlockingInteractionParams {
+      /* Target robot-robot distance in cm */
+      Real TargetDistance;
+      /* Gain of the Lennard-Jones potential */
+      Real Gain;
+      /* Exponent of the Lennard-Jones potential */
+      Real Exponent;
+
+      void Init(TConfigurationNode& t_node);
+      Real GeneralizedLennardJones(Real f_distance);
+   };
 
 
    /* Class constructor. */
@@ -84,6 +129,11 @@ public:
 protected:
 
 virtual CVector2 GetSwarmVelocity();
+/*
+    * Calculates the flocking interaction vector.
+    */
+   virtual CVector2 FlockingVector();
+
    /*
     * Gets a direction vector as input and transforms it into wheel actuation.
     */
@@ -108,9 +158,6 @@ private:
 
    // timer for last object avoided
    float obstacleAvoidance_timer;
-
-   //Tracks beacon visibility state. If becaon is not visible 0, If beacon is visible 1.
-   int beaconVisible = 0;
    
    /*
     * The following variables are used as parameters for the
@@ -121,7 +168,14 @@ private:
    /* Wheel speed. */
    Real m_fWheelVelocity;
 
- 
+ /* The turning parameters. */
+   SWheelTurningParams m_sWheelTurningParams;
+/* The flocking interaction parameters. */
+   SFlockingInteractionParams m_sFlockingParams;
+  /* Pointer to the LEDs actuator */
+   CCI_LEDsActuator* m_pcLEDs;
+   /* Pointer to the omnidirectional camera sensor */
+   CCI_ColoredBlobOmnidirectionalCameraSensor* m_pcCamera;
 
 };
 
