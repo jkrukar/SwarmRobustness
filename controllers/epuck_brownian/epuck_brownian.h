@@ -42,6 +42,8 @@ class CEPuckbrownian : public CCI_Controller {
 
 public:
 
+
+
    /* Class constructor. */
    CEPuckbrownian();
 
@@ -79,6 +81,15 @@ public:
     */
    virtual void Destroy() {}
 
+protected:
+
+virtual CVector2 GetSwarmVelocity();
+   /*
+    * Gets a direction vector as input and transforms it into wheel actuation.
+    */
+void SetWheelSpeedsFromVector(const CVector2& c_heading);
+
+
 private:
 
    /* Pointer to the differential steering actuator */
@@ -107,6 +118,9 @@ private:
    /* Wheel speed. */
    Real m_fWheelVelocity;
 
+ 
+
 };
 
 #endif
+
