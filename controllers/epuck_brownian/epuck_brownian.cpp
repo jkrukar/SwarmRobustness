@@ -141,7 +141,7 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
 /*********************************************************************************************/
 void CEPuckbrownian::ControlStep() 
 {
-   /* Get the highest reading in front of the robot, which corresponds to the closest object */
+   /* Get the highest reading in front of the robot, which corresponds to the closest object 
    Real fMaxReadVal  = m_pcProximity->GetReadings()[1];
    UInt32 unMaxReadIdx = 0;
   
@@ -158,17 +158,17 @@ void CEPuckbrownian::ControlStep()
       fMaxReadVal = m_pcProximity->GetReadings()[6];
       unMaxReadIdx = 6;
    }
-   /* Do we have an obstacle in front? */
+   /* Do we have an obstacle in front? 
    if(fMaxReadVal > 0.0f) {
      obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
-     /* Yes, we do: avoid it */
+     /* Yes, we do: avoid it 
      if(unMaxReadIdx == 0 || unMaxReadIdx == 1) {
-       /* The obstacle is on the left, turn right */
+       /* The obstacle is on the left, turn right 
        m_pcWheels->SetLinearVelocity(m_fWheelVelocity, 0.0f);
        
      }
      else {
-       /* The obstacle is on the left, turn right */
+       /* The obstacle is on the left, turn right 
        m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
      }
    }
@@ -177,10 +177,12 @@ void CEPuckbrownian::ControlStep()
    else {
      obstacleAvoidance_timer++; // time since last obstacle avoidance
       
-       SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
+      
        //m_pcWheels->SetLinearVelocity(m_fWheelVelocity,m_fWheelVelocity);
        
    }
+*/
+ SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
 
 }
 
