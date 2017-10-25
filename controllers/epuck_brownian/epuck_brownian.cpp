@@ -106,11 +106,63 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
   }
 
   /*TODO: Remove eventually. Left in for debugging/demonstration purposes*/
-  float averageAngle = averageRadians*180/M_PI;
-  
+  // float averageAngle = averageRadians*180/M_PI;
   //argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
 
   return averageRadians;
+}
+
+/****************************************************************************************/
+/* Returns a float equal to the distance between the bot and the nearest detectable bot.
+/* Used to evaluate when a threshold for short range repulsion has been exceeded.
+/* TODO: this function might need to be scrapped. I used it for testing purposes.
+/* Could be used to detect collisions instead of proximity sensor if needed.      
+/****************************************************************************************/
+float getDistanceToNearestBot(CCI_RangeAndBearingSensor* m_pcRABSens){
+
+  float nearestDistance = 80; //Set to the max range of the RAB sensor.
+  argos::CCI_RangeAndBearingSensor::TReadings rabReadings = m_pcRABSens->GetReadings();
+  int rabReadingCount = rabReadings.size();
+  float nextReading = 0;
+
+  for(int i=0;i<rabReadingCount;i++){
+
+    nextReading = rabReadings[i].Range;
+
+    if(nextReading < nearestDistance){
+      nearestDistance = nextReading;
+    }
+  }
+
+  // argos::LOG << "nearestDistanceToBot = " << nearestDistance << std::endl;
+  return nearestDistance;
+}
+
+/*********************************************************************************/
+/* Returns 1 if the beacon is visible to this bot, else returns 0.               */
+/* To be used as a check to increase short range repulsion for symmetry breaking.*/
+/*********************************************************************************/
+int checkBeaconVisibility(CCI_EyeBotLightSensor* m_pcLightSens){
+
+  int lightSensorState=0;
+  float nextReading=0.0f;
+  argos::CCI_EyeBotLightSensor::TReadings lightSensorReading = m_pcLightSens->GetReadings();
+  int lightReadingCount = lightSensorReading.size();
+  
+  for(int i=0;i<lightReadingCount;i++){
+
+    nextReading = lightSensorReading[i].Value;
+
+    if(nextReading > 0){
+      lightSensorState = 1;
+      i=lightReadingCount; //Exit loop, if at least one sensor is illuminated
+    }
+    
+  }
+
+  // argos::LOG << "lightSensorState = " << lightSensorState << std::endl;
+
+  return lightSensorState;
 }
 /*********************************************************************************************/
 /*********************************************************************************************/
@@ -133,6 +185,7 @@ void CEPuckbrownian::ControlStep()
       fMaxReadVal = m_pcProximity->GetReadings()[6];
       unMaxReadIdx = 6;
    }
+
    /* Do we have an obstacle in front? */
    if(fMaxReadVal > 0.0f) {
      obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
@@ -147,8 +200,6 @@ void CEPuckbrownian::ControlStep()
        m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
      }
    }
-
-  
    else {
      obstacleAvoidance_timer++; // time since last obstacle avoidance
       

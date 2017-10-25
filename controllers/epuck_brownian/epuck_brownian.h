@@ -108,6 +108,9 @@ private:
 
    // timer for last object avoided
    float obstacleAvoidance_timer;
+
+   //Tracks beacon visibility state. If becaon is not visible 0, If beacon is visible 1.
+   int beaconVisible = 0;
    
    /*
     * The following variables are used as parameters for the
