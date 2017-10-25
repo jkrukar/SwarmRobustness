@@ -7,23 +7,6 @@
 #include<bits/stdc++.h>
 
 
-
-/****************************************/
-/****************************************/
-
-CEPuckbrownian::CEPuckbrownian() :
-   m_pcWheels(NULL),
-   m_pcProximity(NULL),
-   m_pcRABSens(NULL),
-   m_pcLightSens(NULL),
-   m_pcPosSens(NULL),
-   m_pcLEDs(NULL),
-   m_pcCamera(NULL),
-   m_fWheelVelocity(2.5f) {}
-   
-
-/****************************************/
-/****************************************/
 /****************************************/
 /****************************************/
 
@@ -43,39 +26,25 @@ void CEPuckbrownian::SWheelTurningParams::Init(TConfigurationNode& t_node) {
       THROW_ARGOSEXCEPTION_NESTED("Error initializing controller wheel turning parameters.", ex);
    }
 }
-/****************************************/
-/****************************************/
-
-void CEPuckbrownian::SFlockingInteractionParams::Init(TConfigurationNode& t_node) {
-   try {
-      GetNodeAttribute(t_node, "target_distance", TargetDistance);
-      GetNodeAttribute(t_node, "gain", Gain);
-      GetNodeAttribute(t_node, "exponent", Exponent);
-   }
-   catch(CARGoSException& ex) {
-      THROW_ARGOSEXCEPTION_NESTED("Error initializing controller flocking parameters.", ex);
-   }
-}
 
 /****************************************/
 /****************************************/
-
 /****************************************/
 /****************************************/
 
-/*
- * This function is a generalization of the Lennard-Jones potential
- */
-Real CEPuckbrownian::SFlockingInteractionParams::GeneralizedLennardJones(Real f_distance) {
-   Real fNormDistExp = ::pow(TargetDistance / f_distance, Exponent);
-   return -Gain / f_distance * (fNormDistExp * fNormDistExp - fNormDistExp);
-}
+CEPuckbrownian::CEPuckbrownian() :
+   m_pcWheels(NULL),
+   m_pcProximity(NULL),
+   m_pcRABSens(NULL),
+   m_pcLightSens(NULL),
+   m_pcPosSens(NULL),
+   m_pcLEDs(NULL),
+   m_fWheelVelocity(2.5f) {}
+   
 
 /****************************************/
 /****************************************/
 
-/****************************************/
-/****************************************/
 void CEPuckbrownian::Init(TConfigurationNode& t_node) {
    /*
     * Get sensor/actuator handles
@@ -104,22 +73,11 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
    m_pcPosSens = GetSensor  <CCI_PositioningSensor             >("positioning"    );
    m_pcRABSens   = GetSensor  <CCI_RangeAndBearingSensor    >("range_and_bearing" );
    m_pcLEDs   = GetActuator<CCI_LEDsActuator                          >("leds");
-   m_pcCamera = GetSensor  <CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
    m_pcLightSens = GetSensor  <CCI_EyeBotLightSensor        >("eyebot_light"      );
 
 
-   /*
-    * Parse the configuration file
-    *
-    * The user defines this part. Here, the algorithm accepts three
-    * parameters and it's nice to put them in the config file so we don't
-    * have to recompile if we want to try other settings.
-    */
-   GetNodeAttributeOrDefault(t_node, "velocity", m_fWheelVelocity, m_fWheelVelocity);
- /*
-    * Parse the config file
-    */
-   try {
+
+try {
       /* Wheel turning */
       m_sWheelTurningParams.Init(GetNode(t_node, "wheel_turning"));
    }
@@ -127,13 +85,8 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
       THROW_ARGOSEXCEPTION_NESTED("Error parsing the controller parameters.", ex);
    }
 
-    /*
-    * Other init stuff
-    */
-   /* Enable camera filtering */
-   m_pcCamera->Enable();
-   /* Set beacon color to all red to be visible for other robots */
-   m_pcLEDs->SetSingleColor(12, CColor::RED);
+   GetNodeAttributeOrDefault(t_node, "velocity", m_fWheelVelocity, m_fWheelVelocity);
+   //m_pcLEDs->SetSingleColor(12, CColor::RED);
 }
 
 /*********************************************************************************************************/
@@ -191,9 +144,9 @@ void CEPuckbrownian::ControlStep()
    /* Get the highest reading in front of the robot, which corresponds to the closest object */
    Real fMaxReadVal  = m_pcProximity->GetReadings()[1];
    UInt32 unMaxReadIdx = 0;
-  /*
+  
        argos::LOG << "Distance to object = " << fMaxReadVal  << "'" << std::endl;
-   if(fMaxReadVal < m_pcProximity->GetReadings()[0]) {
+   if(fMaxReadVal < m_pcProximity->GetReadings()[1]) {
       fMaxReadVal = m_pcProximity->GetReadings()[1];
       unMaxReadIdx = 1;
    }
@@ -205,32 +158,30 @@ void CEPuckbrownian::ControlStep()
       fMaxReadVal = m_pcProximity->GetReadings()[6];
       unMaxReadIdx = 6;
    }
-*/
-   /* Do we have an obstacle in front? 
+   /* Do we have an obstacle in front? */
    if(fMaxReadVal > 0.0f) {
      obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
-     /* Yes, we do: avoid it 
+     /* Yes, we do: avoid it */
      if(unMaxReadIdx == 0 || unMaxReadIdx == 1) {
-       /* The obstacle is on the left, turn right 
+       /* The obstacle is on the left, turn right */
        m_pcWheels->SetLinearVelocity(m_fWheelVelocity, 0.0f);
        
      }
      else {
-       /* The obstacle is on the left, turn right 
+       /* The obstacle is on the left, turn right */
        m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
      }
    }
-  */
-  /*
+
+  
    else {
      obstacleAvoidance_timer++; // time since last obstacle avoidance
       
-       //SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
+       SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
        //m_pcWheels->SetLinearVelocity(m_fWheelVelocity,m_fWheelVelocity);
        
    }
- */
-   SetWheelSpeedsFromVector(GetSwarmVelocity() + FlockingVector()); // Starts the flocking process
+
 }
 
 /*************************************************************************************************************/
@@ -242,8 +193,7 @@ CVector2 CEPuckbrownian::GetSwarmVelocity()
   float x = m_pcPosSens->GetReading().Position.GetX();
   float y = m_pcPosSens->GetReading().Position.GetY();
 
-  CVector2 test;
-  
+
   CVector2 swarmPosition;
   CVector2 currentPosition;
   CVector2 desiredPosition;
@@ -262,74 +212,12 @@ CVector2 CEPuckbrownian::GetSwarmVelocity()
    
 }
 
-/****************************************/
-/****************************************/
-
-CVector2 CEPuckbrownian::FlockingVector() {
-   /* Get the camera readings */
-   const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings& sReadings = m_pcCamera->GetReadings();
-   /* Go through the camera readings to calculate the flocking interaction vector */
-   if(! sReadings.BlobList.empty()) {
-      CVector2 cAccum;
-      Real fLJ;
-      size_t unBlobsSeen = 0;
-
-      for(size_t i = 0; i < sReadings.BlobList.size(); ++i) {
-
-         /*
-          * The camera perceives the light as a yellow blob
-          * The robots have their red beacon on
-          * So, consider only red blobs
-          * In addition: consider only the closest neighbors, to avoid
-          * attraction to the farthest ones. Taking 180% of the target
-          * distance is a good rule of thumb.
-          */
-         if(sReadings.BlobList[i]->Color == CColor::RED &&
-            sReadings.BlobList[i]->Distance < m_sFlockingParams.TargetDistance * 1.80f) {
-            /*
-             * Take the blob distance and angle
-             * With the distance, calculate the Lennard-Jones interaction force
-             * Form a 2D vector with the interaction force and the angle
-             * Sum such vector to the accumulator
-             */
-            /* Calculate LJ */
-            fLJ = m_sFlockingParams.GeneralizedLennardJones(sReadings.BlobList[i]->Distance);
-            /* Sum to accumulator */
-            cAccum += CVector2(fLJ,
-                               sReadings.BlobList[i]->Angle);
-            /* Increment the blobs seen counter */
-            ++unBlobsSeen;
-         }
-      }
-      if(unBlobsSeen > 0) {
-         /* Divide the accumulator by the number of blobs seen */
-         cAccum /= unBlobsSeen;
-         /* Clamp the length of the vector to the max speed */
-         if(cAccum.Length() > m_sWheelTurningParams.MaxSpeed) {
-            cAccum.Normalize();
-            cAccum *= m_sWheelTurningParams.MaxSpeed;
-         }
-         return cAccum;
-      }
-      else
-         return CVector2();
-   }
-   else {
-      return CVector2();
-   }
-}
-
-/****************************************/
-/****************************************/
-
-
 /*****************************************************************************************************************/
 /* Adjust the wheel speed of the epucks so it not only turns to the direction of the swarms center but           */
 /* it also accelerates at a speed precise speed so the epucks will keep a good distancew(short range reuplsion)  */
 /*****************************************************************************************************************/
 void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading) 
 {
-
   float threshold = 2.5; //controls overall swarm density, article  sets to 2.5
 
   float number_of_robots = 10;//robots in the simulation
@@ -339,14 +227,13 @@ void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading)
   float x_speed = c_heading.GetX();
   float y_speed = c_heading.GetY();
 
-  /* 
+   /*
   if(coherence > threshold)
    {
      m_pcWheels->SetLinearVelocity(x_speed ,y_speed);
    }
 */
-
-  /* Get the heading angle */
+ /* Get the heading angle */
    CRadians cHeadingAngle = c_heading.Angle().SignedNormalize();
    /* Get the length of the heading vector */
    Real fHeadingLength = c_heading.Length();
@@ -408,9 +295,6 @@ void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading)
    }
    /* Finally, set the wheel speeds */
    m_pcWheels->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
-
-
-
 }
 /*********************************************************************************************/
 /*********************************************************************************************/

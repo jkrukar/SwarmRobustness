@@ -30,11 +30,8 @@
 #include <argos3/plugins/robots/eye-bot/control_interface/ci_eyebot_light_sensor.h>
 /* Definition of the LEDs actuator */
 #include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
-/* Definition of the omnidirectional camera sensor */
-#include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_omnidirectional_camera_sensor.h>
-#include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
-/* Definition of the omnidirectional camera sensor */
-#include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_omnidirectional_camera_sensor.h>
+
+
 
 using namespace argos;
 
@@ -75,19 +72,6 @@ public:
 
       void Init(TConfigurationNode& t_tree);
    };
-
- struct SFlockingInteractionParams {
-      /* Target robot-robot distance in cm */
-      Real TargetDistance;
-      /* Gain of the Lennard-Jones potential */
-      Real Gain;
-      /* Exponent of the Lennard-Jones potential */
-      Real Exponent;
-
-      void Init(TConfigurationNode& t_node);
-      Real GeneralizedLennardJones(Real f_distance);
-   };
-
 
    /* Class constructor. */
    CEPuckbrownian();
@@ -132,8 +116,7 @@ virtual CVector2 GetSwarmVelocity();
 /*
     * Calculates the flocking interaction vector.
     */
-   virtual CVector2 FlockingVector();
-
+  
    /*
     * Gets a direction vector as input and transforms it into wheel actuation.
     */
@@ -152,6 +135,8 @@ private:
    CCI_RangeAndBearingSensor* m_pcRABSens;
    /*Pointer to the light sensor*/
    CCI_EyeBotLightSensor* m_pcLightSens;
+   /* Pointer to the LEDs actuator */
+   CCI_LEDsActuator* m_pcLEDs;
 
    // Timer to change direction
    int timerToTurn;
@@ -170,12 +155,7 @@ private:
 
  /* The turning parameters. */
    SWheelTurningParams m_sWheelTurningParams;
-/* The flocking interaction parameters. */
-   SFlockingInteractionParams m_sFlockingParams;
-  /* Pointer to the LEDs actuator */
-   CCI_LEDsActuator* m_pcLEDs;
-   /* Pointer to the omnidirectional camera sensor */
-   CCI_ColoredBlobOmnidirectionalCameraSensor* m_pcCamera;
+
 
 };
 
