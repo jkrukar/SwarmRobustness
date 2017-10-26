@@ -118,24 +118,32 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
 /* TODO: this function might need to be scrapped. I used it for testing purposes.
 /* Could be used to detect collisions instead of proximity sensor if needed.      
 /****************************************************************************************/
-float getDistanceToNearestBot(CCI_RangeAndBearingSensor* m_pcRABSens){
+argos::CVector2 getVectorToNearestBot(CCI_RangeAndBearingSensor* m_pcRABSens){
 
-  float nearestDistance = 80; //Set to the max range of the RAB sensor.
+  CVector2 vectorToNearestBot;
+  Real distanceToNearestBot = 80; //Set to the max range of the RAB sensor.
+  CRadians radiansToNearestBot;
   argos::CCI_RangeAndBearingSensor::TReadings rabReadings = m_pcRABSens->GetReadings();
   int rabReadingCount = rabReadings.size();
-  float nextReading = 0;
+  float nextDistance = 0;
 
   for(int i=0;i<rabReadingCount;i++){
 
-    nextReading = rabReadings[i].Range;
+    nextDistance = rabReadings[i].Range;
 
-    if(nextReading < nearestDistance){
-      nearestDistance = nextReading;
+    if(nextDistance < distanceToNearestBot){
+      distanceToNearestBot = nextDistance;
+      radiansToNearestBot = CRadians(rabReadings[i].HorizontalBearing.GetValue());
     }
   }
 
-  // argos::LOG << "nearestDistanceToBot = " << nearestDistance << std::endl;
-  return nearestDistance;
+  // radiansToNearestBot = CRadians(radiansToNearestBot);
+
+  vectorToNearestBot = CVector2(distanceToNearestBot,radiansToNearestBot);
+
+  // argos::LOG << "nearestDistanceToBot = " << vectorToNearestBot << std::endl;
+
+  return vectorToNearestBot;
 }
 
 /*********************************************************************************/
@@ -168,46 +176,47 @@ int checkBeaconVisibility(CCI_EyeBotLightSensor* m_pcLightSens){
 /*********************************************************************************************/
 void CEPuckbrownian::ControlStep() 
 {
-   /* Get the highest reading in front of the robot, which corresponds to the closest object */
-   Real fMaxReadVal  = m_pcProximity->GetReadings()[1];
-   UInt32 unMaxReadIdx = 0;
-  
-       argos::LOG << "Distance to object = " << fMaxReadVal  << "'" << std::endl;
-   if(fMaxReadVal < m_pcProximity->GetReadings()[1]) {
-      fMaxReadVal = m_pcProximity->GetReadings()[1];
-      unMaxReadIdx = 1;
-   }
-   if(fMaxReadVal < m_pcProximity->GetReadings()[7]) {
-      fMaxReadVal = m_pcProximity->GetReadings()[7];
-      unMaxReadIdx = 7;
-   }
-   if(fMaxReadVal < m_pcProximity->GetReadings()[6]) {
-      fMaxReadVal = m_pcProximity->GetReadings()[6];
-      unMaxReadIdx = 6;
-   }
 
-   /* Do we have an obstacle in front? */
-   if(fMaxReadVal > 0.0f) {
-     obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
-     /* Yes, we do: avoid it */
-     if(unMaxReadIdx == 0 || unMaxReadIdx == 1) {
-       /* The obstacle is on the left, turn right */
-       m_pcWheels->SetLinearVelocity(m_fWheelVelocity, 0.0f);
-       
-     }
-     else {
-       /* The obstacle is on the left, turn right */
-       m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
-     }
-   }
-   else {
-     obstacleAvoidance_timer++; // time since last obstacle avoidance
+  int beaconVisible = checkBeaconVisibility(m_pcLightSens);
+  float repulsionThreshold;
+  CVector2 vectorToNearestBot = getVectorToNearestBot(m_pcRABSens);
+  float distanceToNearestBot = vectorToNearestBot.Length();
+  float radiansToNearestBot = vectorToNearestBot.Angle().GetValue();
+
+  // argos::LOG << "distanceToNearestBot = " << distanceToNearestBot << std::endl;
+
+  if(beaconVisible){
+    repulsionThreshold = 10;
+  }else{
+    repulsionThreshold = 20;
+  }
+
+  //If the bot is getting too close to the obstacle, avoid it.
+  if(distanceToNearestBot < repulsionThreshold){
+
+    //If the nearest bot is between 90' and -90' relative to the bot, avoid.
+    //Only care about obstacles near the front half of the bot.
+    if(abs(radiansToNearestBot) < M_PI/2){
+
+      obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
+
+      //If radians are negative: the obstacle is to the right, turn left.
+      if(radiansToNearestBot<0){
+
+        m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
+      }
+      //Else the obstacle is to the left, turn right.
+      else{
+
+        m_pcWheels->SetLinearVelocity(m_fWheelVelocity, 0.0f);
+      }
+    }
+  }else{
+
+    obstacleAvoidance_timer++; // time since last obstacle avoidance
       
-       SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
-       //m_pcWheels->SetLinearVelocity(m_fWheelVelocity,m_fWheelVelocity);
-       
-   }
-
+    SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
+  } 
 }
 
 /*************************************************************************************************************/
@@ -224,8 +233,9 @@ CVector2 CEPuckbrownian::GetSwarmVelocity()
   CVector2 currentPosition;
   CVector2 desiredPosition;
   CVector2 current_WheelVelocity;
+  float radiansToSwarmCenter = getRadiansToSwarmCenter(m_pcRABSens);
 
-  swarmPosition = CVector2(cos(getRadiansToSwarmCenter(m_pcRABSens)),sin(getRadiansToSwarmCenter(m_pcRABSens))); 
+  swarmPosition = CVector2(cos(radiansToSwarmCenter),sin(radiansToSwarmCenter)); 
   currentPosition = CVector2(x,y);
   current_WheelVelocity = CVector2(m_fWheelVelocity,m_fWheelVelocity);
 
@@ -245,18 +255,23 @@ CVector2 CEPuckbrownian::GetSwarmVelocity()
 void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading) 
 {
   float threshold = 2.5; //controls overall swarm density, article  sets to 2.5
+  threshold *= 10; //Multiply by 10 ticks/seconds so threshold equals 2.5 seconds.
 
   float number_of_robots = 10;//robots in the simulation
 
-  float coherence = number_of_robots * (obstacleAvoidance_timer/1000); // the 'w' variable from the w-algorithm
+  // float coherence = number_of_robots * (obstacleAvoidance_timer/1000); // the 'w' variable from the w-algorithm
   
   float x_speed = c_heading.GetX();
   float y_speed = c_heading.GetY();
 
    
-  if(coherence > threshold)
+  if(obstacleAvoidance_timer > threshold)
    {
      m_pcWheels->SetLinearVelocity(x_speed ,y_speed);
+   }
+   else
+   {
+    m_pcWheels->SetLinearVelocity(m_fWheelVelocity ,m_fWheelVelocity);
    }
 
 }
