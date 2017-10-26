@@ -197,10 +197,13 @@ int checkBeaconVisibility(CCI_EyeBotLightSensor* m_pcLightSens){
       lightSensorState = 1;
       i=lightReadingCount; //Exit loop, if at least one sensor is illuminated
     }
-    
+    else
+    {
+      lightSensorState = 0;
+    }
   }
 
-  // argos::LOG << "lightSensorState = " << lightSensorState << std::endl;
+ // argos::LOG << "lightSensorState = " << lightSensorState << std::endl;
 
   return lightSensorState;
 }
@@ -215,12 +218,12 @@ void CEPuckbrownian::ControlStep()
   float distanceToNearestBot = vectorToNearestBot.Length();
   float radiansToNearestBot = vectorToNearestBot.Angle().GetValue();
 
-  // argos::LOG << "distanceToNearestBot = " << distanceToNearestBot << std::endl;
+  argos::LOG << "distanceToNearestBot = " << distanceToNearestBot << std::endl;
 
-  if(beaconVisible){
+  if(beaconVisible == 1){
     repulsionThreshold = 10;
   }else{
-    repulsionThreshold = 40; //change later for beacon taxi
+    repulsionThreshold = 7; //change later for beacon taxi
   }
 
   //If the bot is getting too close to the obstacle, avoid it.
