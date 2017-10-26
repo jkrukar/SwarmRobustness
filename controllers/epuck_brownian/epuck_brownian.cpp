@@ -6,7 +6,25 @@
 #include <cmath>
 #include<bits/stdc++.h>
 
+/****************************************/
+/****************************************/
 
+void CEPuckbrownian::SWheelTurningParams::Init(TConfigurationNode& t_node) {
+   try {
+      TurningMechanism = NO_TURN;
+      CDegrees cAngle;
+      GetNodeAttribute(t_node, "hard_turn_angle_threshold", cAngle);
+      HardTurnOnAngleThreshold = ToRadians(cAngle);
+      GetNodeAttribute(t_node, "soft_turn_angle_threshold", cAngle);
+      SoftTurnOnAngleThreshold = ToRadians(cAngle);
+      GetNodeAttribute(t_node, "no_turn_angle_threshold", cAngle);
+      NoTurnAngleThreshold = ToRadians(cAngle);
+      GetNodeAttribute(t_node, "max_speed", MaxSpeed);
+   }
+   catch(CARGoSException& ex) {
+      THROW_ARGOSEXCEPTION_NESTED("Error initializing controller wheel turning parameters.", ex);
+   }
+}
 
 /****************************************/
 /****************************************/
@@ -62,31 +80,43 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
     */
    GetNodeAttributeOrDefault(t_node, "velocity", m_fWheelVelocity, m_fWheelVelocity);
 
+  try {
+     /* Wheel turning */
+     m_sWheelTurningParams.Init(GetNode(t_node, "wheel_turning"));
+  }
+  catch(CARGoSException& ex) {
+     THROW_ARGOSEXCEPTION_NESTED("Error parsing the controller parameters.", ex);
+  }
+
 }
 
 /*********************************************************************************************************/
 /* Averages the range and bearing sensor readings and outputs the average angle in radians.
 /*    The average angle is the angle towards the center of the swarm relative to the sensors orientation.
 /*********************************************************************************************************/
-float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
+CVector2 getVectorToSwarm(CCI_RangeAndBearingSensor* m_pcRABSens){
 
-  float averageRadians = 0;
-
-  //Get average of range and bearing sensor readings
+  CVector2 vectorToSwarm;
+  float averageAngle = 0;
+  float averageDistance = 0;
   argos::CCI_RangeAndBearingSensor::TReadings rabReadings = m_pcRABSens->GetReadings();
   int rabReadingCount = rabReadings.size();
-  float nextReading = 0;
+  float nextAngle = 0;
   float sinMean = 0;
   float cosMean = 0;
 
   for(int i=0;i<rabReadingCount;i++){
 
-    nextReading = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
+    nextAngle = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
+    averageDistance += rabReadings[i].Range;
 
     /*Add sin and cos values of the angle to the sin and cos total.*/
-    sinMean += sin(nextReading);
-    cosMean += cos(nextReading);
+    sinMean += sin(nextAngle);
+    cosMean += cos(nextAngle);
   }
+
+  /*Average the distance*/
+  averageDistance /=rabReadingCount;
 
   /*Divide the sin and cos total by the number of readings to get the average*/
   sinMean /= rabReadingCount;
@@ -97,19 +127,21 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
   cosMean = cosMean*M_PI/180;
 
   /*Take the arctangent to get the mean angle*/
-  averageRadians = atan(sinMean/cosMean);
+  averageAngle = atan(sinMean/cosMean);
 
   if(cosMean < 0){
-    averageRadians += M_PI;
+    averageAngle += M_PI;
   }else if(sinMean < 0){
-    averageRadians += M_PI*2;
+    averageAngle += M_PI*2;
   }
 
+  vectorToSwarm = CVector2(averageDistance,CRadians(averageAngle));
+
   /*TODO: Remove eventually. Left in for debugging/demonstration purposes*/
-  // float averageAngle = averageRadians*180/M_PI;
+  // float averageAngle = averageAngle*180/M_PI;
   //argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
 
-  return averageRadians;
+  return vectorToSwarm;
 }
 
 /****************************************************************************************/
@@ -188,7 +220,7 @@ void CEPuckbrownian::ControlStep()
   if(beaconVisible){
     repulsionThreshold = 10;
   }else{
-    repulsionThreshold = 20;
+    repulsionThreshold = 40; //change later for beacon taxi
   }
 
   //If the bot is getting too close to the obstacle, avoid it.
@@ -214,8 +246,18 @@ void CEPuckbrownian::ControlStep()
   }else{
 
     obstacleAvoidance_timer++; // time since last obstacle avoidance
-      
-    SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
+
+    float threshold = 2.5; //controls overall swarm density, article  sets to 2.5
+    // threshold *= 10; //Multiply by 10 ticks/seconds so threshold equals 2.5 seconds.
+
+    if(obstacleAvoidance_timer > threshold){
+
+      SetWheelSpeedsFromVector(getVectorToSwarm(m_pcRABSens)); // Starts the flocking process
+
+    }else{
+
+      m_pcWheels->SetLinearVelocity(m_fWheelVelocity, m_fWheelVelocity); //Keep going straight
+    }
   } 
 }
 
@@ -225,26 +267,26 @@ void CEPuckbrownian::ControlStep()
 CVector2 CEPuckbrownian::GetSwarmVelocity()
 {
   
-  float x = m_pcPosSens->GetReading().Position.GetX();
-  float y = m_pcPosSens->GetReading().Position.GetY();
+  // float x = m_pcPosSens->GetReading().Position.GetX();
+  // float y = m_pcPosSens->GetReading().Position.GetY();
 
 
-  CVector2 swarmPosition;
-  CVector2 currentPosition;
-  CVector2 desiredPosition;
-  CVector2 current_WheelVelocity;
-  float radiansToSwarmCenter = getRadiansToSwarmCenter(m_pcRABSens);
+  // CVector2 swarmPosition;
+  // CVector2 currentPosition;
+  // CVector2 desiredPosition;
+  // CVector2 current_WheelVelocity;
+  // float radiansToSwarmCenter = getRadiansToSwarmCenter(m_pcRABSens);
 
-  swarmPosition = CVector2(cos(radiansToSwarmCenter),sin(radiansToSwarmCenter)); 
-  currentPosition = CVector2(x,y);
-  current_WheelVelocity = CVector2(m_fWheelVelocity,m_fWheelVelocity);
+  // swarmPosition = CVector2(cos(radiansToSwarmCenter),sin(radiansToSwarmCenter)); 
+  // currentPosition = CVector2(x,y);
+  // current_WheelVelocity = CVector2(m_fWheelVelocity,m_fWheelVelocity);
 
-  swarmPosition -= currentPosition; /* postion of swarms center relative to a epucks positions i.e gives us our "desired position" */
+  // swarmPosition -= currentPosition; /* postion of swarms center relative to a epucks positions i.e gives us our "desired position" */
   
-  swarmPosition -= current_WheelVelocity; /* velocity needed to reach swarm */
+  // swarmPosition -= current_WheelVelocity; /* velocity needed to reach swarm */
 
 
-  return swarmPosition;
+  // return swarmPosition;
    
 }
 
@@ -252,28 +294,69 @@ CVector2 CEPuckbrownian::GetSwarmVelocity()
 /* Adjust the wheel speed of the epucks so it not only turns to the direction of the swarms center but           */
 /* it also accelerates at a speed precise speed so the epucks will keep a good distancew(short range reuplsion)  */
 /*****************************************************************************************************************/
-void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading) 
-{
-  float threshold = 2.5; //controls overall swarm density, article  sets to 2.5
-  threshold *= 10; //Multiply by 10 ticks/seconds so threshold equals 2.5 seconds.
+void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading) {
+   /* Get the heading angle */
+   CRadians cHeadingAngle = c_heading.Angle().SignedNormalize();
+   /* Get the length of the heading vector */
+   Real fHeadingLength = c_heading.Length();
+   /* Clamp the speed so that it's not greater than MaxSpeed */
+   Real fBaseAngularWheelSpeed = Min<Real>(fHeadingLength, m_sWheelTurningParams.MaxSpeed);
 
-  float number_of_robots = 10;//robots in the simulation
-
-  // float coherence = number_of_robots * (obstacleAvoidance_timer/1000); // the 'w' variable from the w-algorithm
-  
-  float x_speed = c_heading.GetX();
-  float y_speed = c_heading.GetY();
-
-   
-  if(obstacleAvoidance_timer > threshold)
-   {
-     m_pcWheels->SetLinearVelocity(x_speed ,y_speed);
+   /* Turning state switching conditions */
+   if(Abs(cHeadingAngle) <= m_sWheelTurningParams.NoTurnAngleThreshold) {
+      /* No Turn, heading angle very small */
+      m_sWheelTurningParams.TurningMechanism = SWheelTurningParams::NO_TURN;
    }
-   else
-   {
-    m_pcWheels->SetLinearVelocity(m_fWheelVelocity ,m_fWheelVelocity);
+   else if(Abs(cHeadingAngle) > m_sWheelTurningParams.HardTurnOnAngleThreshold) {
+      /* Hard Turn, heading angle very large */
+      m_sWheelTurningParams.TurningMechanism = SWheelTurningParams::HARD_TURN;
+   }
+   else if(m_sWheelTurningParams.TurningMechanism == SWheelTurningParams::NO_TURN &&
+           Abs(cHeadingAngle) > m_sWheelTurningParams.SoftTurnOnAngleThreshold) {
+      /* Soft Turn, heading angle in between the two cases */
+      m_sWheelTurningParams.TurningMechanism = SWheelTurningParams::SOFT_TURN;
    }
 
+   /* Wheel speeds based on current turning state */
+   Real fSpeed1, fSpeed2;
+   switch(m_sWheelTurningParams.TurningMechanism) {
+      case SWheelTurningParams::NO_TURN: {
+         /* Just go straight */
+         fSpeed1 = fBaseAngularWheelSpeed;
+         fSpeed2 = fBaseAngularWheelSpeed;
+         break;
+      }
+
+      case SWheelTurningParams::SOFT_TURN: {
+         /* Both wheels go straight, but one is faster than the other */
+         Real fSpeedFactor = (m_sWheelTurningParams.HardTurnOnAngleThreshold - Abs(cHeadingAngle)) / m_sWheelTurningParams.HardTurnOnAngleThreshold;
+         fSpeed1 = fBaseAngularWheelSpeed - fBaseAngularWheelSpeed * (1.0 - fSpeedFactor);
+         fSpeed2 = fBaseAngularWheelSpeed + fBaseAngularWheelSpeed * (1.0 - fSpeedFactor);
+         break;
+      }
+
+      case SWheelTurningParams::HARD_TURN: {
+         /* Opposite wheel speeds */
+         fSpeed1 = -m_sWheelTurningParams.MaxSpeed;
+         fSpeed2 =  m_sWheelTurningParams.MaxSpeed;
+         break;
+      }
+   }
+
+   /* Apply the calculated speeds to the appropriate wheels */
+   Real fLeftWheelSpeed, fRightWheelSpeed;
+   if(cHeadingAngle > CRadians::ZERO) {
+      /* Turn Left */
+      fLeftWheelSpeed  = fSpeed1;
+      fRightWheelSpeed = fSpeed2;
+   }
+   else {
+      /* Turn Right */
+      fLeftWheelSpeed  = fSpeed2;
+      fRightWheelSpeed = fSpeed1;
+   }
+   /* Finally, set the wheel speeds */
+   m_pcWheels->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
 }
 /*********************************************************************************************/
 /*********************************************************************************************/

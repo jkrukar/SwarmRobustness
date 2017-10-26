@@ -43,6 +43,29 @@ class CEPuckbrownian : public CCI_Controller {
 public:
 
 
+  struct SWheelTurningParams {
+      /*
+       * The turning mechanism.
+       * The robot can be in three different turning states.
+       */
+      enum ETurningMechanism
+      {
+         NO_TURN = 0, // go straight
+         SOFT_TURN,   // both wheels are turning forwards, but at different speeds
+         HARD_TURN    // wheels are turning with opposite speeds
+      } TurningMechanism;
+      /*
+       * Angular thresholds to change turning state.
+       */
+      CRadians HardTurnOnAngleThreshold;
+      CRadians SoftTurnOnAngleThreshold;
+      CRadians NoTurnAngleThreshold;
+      /* Maximum wheel speed */
+      Real MaxSpeed;
+
+      void Init(TConfigurationNode& t_tree);
+   };
+
 
    /* Class constructor. */
    CEPuckbrownian();
@@ -120,6 +143,9 @@ private:
     */
    /* Wheel speed. */
    Real m_fWheelVelocity;
+
+   /* The turning parameters. */
+   SWheelTurningParams m_sWheelTurningParams;
 
  
 
