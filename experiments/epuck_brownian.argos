@@ -6,7 +6,7 @@
   <!-- ************************* -->
   <framework>
     <system threads="0" />
-    <experiment length="0"
+    <experiment length="1500"
                 ticks_per_second="10"
                 random_seed="0" />
   </framework>
@@ -35,10 +35,10 @@
         <wheel_turning hard_turn_angle_threshold="90"
                        soft_turn_angle_threshold="70"
                        no_turn_angle_threshold="10"
-                       max_speed="2.5" />
+                       max_speed="10.0" />
       </params>
     </epuck_brownian_controller>
-ess  </controllers>
+  </controllers>
 
   <!-- *********************** -->
   <!-- * Arena configuration * -->

@@ -4,6 +4,9 @@
 #include <argos3/core/utility/configuration/argos_configuration.h>
 #include <argos3/core/utility/logging/argos_log.h>
 #include <cmath>
+#include <argos3/core/simulator/space/space.h>
+#include <argos3/core/simulator/simulator.h>
+#include <argos3/plugins/simulator/entities/light_entity.h>
 #include<bits/stdc++.h>
 
 /****************************************/
@@ -26,6 +29,7 @@ void CEPuckbrownian::SWheelTurningParams::Init(TConfigurationNode& t_node) {
    }
 }
 
+
 /****************************************/
 /****************************************/
 
@@ -35,7 +39,7 @@ CEPuckbrownian::CEPuckbrownian() :
    m_pcRABSens(NULL),
    m_pcLightSens(NULL),
    m_pcPosSens(NULL),
-   m_fWheelVelocity(2.5f) {}
+   m_fWheelVelocity(10.0f) {}
    
 
 /****************************************/
@@ -87,7 +91,6 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
   catch(CARGoSException& ex) {
      THROW_ARGOSEXCEPTION_NESTED("Error parsing the controller parameters.", ex);
   }
-
 }
 
 /*********************************************************************************************************/
@@ -139,7 +142,7 @@ CVector2 getVectorToSwarm(CCI_RangeAndBearingSensor* m_pcRABSens){
 
   /*TODO: Remove eventually. Left in for debugging/demonstration purposes*/
   // float averageAngle = averageAngle*180/M_PI;
-  //argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
+  // argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
 
   return vectorToSwarm;
 }
@@ -209,19 +212,44 @@ int checkBeaconVisibility(CCI_EyeBotLightSensor* m_pcLightSens){
 }
 /*********************************************************************************************/
 /*********************************************************************************************/
+float getDistanceToGoal(CCI_PositioningSensor* m_pcPosSens){
+  argos::CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
+  CVector3 currentPosition = positionSensorReading.Position;
+  CVector3 goalPosition = CVector3(0,-3,0); //Hard coded in since it was tricky to get a pointer to the light entity.
+  CVector3 distanceToGoal = currentPosition - goalPosition;
+
+  return distanceToGoal.Length();
+}
+
+
+/*********************************************************************************************/
+/*********************************************************************************************/
 void CEPuckbrownian::ControlStep() 
 {
+
+  if(reachedGoal){
+    return;
+  }
+
+  float distanceToGoal = getDistanceToGoal(m_pcPosSens);
+
+  if(distanceToGoal <= 0.2){
+    std::clog << "Reached Goal @ "<< tickCounter << std::endl;
+    // argos::LOGERR << "Reached Goal!!!! @ "<< tickCounter << std::endl;
+    reachedGoal = 1;
+  }
+
+  tickCounter ++;
 
   int beaconVisible = checkBeaconVisibility(m_pcLightSens);
   float repulsionThreshold;
   CVector2 vectorToNearestBot = getVectorToNearestBot(m_pcRABSens);
   float distanceToNearestBot = vectorToNearestBot.Length();
   float radiansToNearestBot = vectorToNearestBot.Angle().GetValue();
-
-  argos::LOG << "distanceToNearestBot = " << distanceToNearestBot << std::endl;
+  
 
   if(beaconVisible == 1){
-    repulsionThreshold = 10;
+    repulsionThreshold = 9;
   }else{
     repulsionThreshold = 7; //change later for beacon taxi
   }

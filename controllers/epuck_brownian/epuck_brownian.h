@@ -132,6 +132,10 @@ private:
    // timer for last object avoided
    float obstacleAvoidance_timer;
 
+   int tickCounter=0;
+
+   int reachedGoal = 0;
+
    //Tracks beacon visibility state. If becaon is not visible 0, If beacon is visible 1.
    int beaconVisible = 0;
    
