@@ -94,7 +94,7 @@ public:
     * so the function could have been omitted. It's here just for
     * completeness.
     */
-   virtual void Reset() {}
+   virtual void Reset(); 
 
    /*
     * Called to cleanup what done by Init() when the experiment finishes.
@@ -122,6 +122,7 @@ public:
    /*
     * Called by loop function determine if simulation is over
     */
+   static UInt32 num_robots_task_completed;
    static UInt32 getNumRobotsFinished() { return num_robots_task_completed; }
    static void resetNumRobotsFinished() { num_robots_task_completed = 0; }
 
@@ -132,8 +133,6 @@ virtual CVector2 GetSwarmVelocity();
     * Gets a direction vector as input and transforms it into wheel actuation.
     */
 void SetWheelSpeedsFromVector(const CVector2& c_heading);
-
-static UInt32 num_robots_task_completed = 0;
 
 private:
 

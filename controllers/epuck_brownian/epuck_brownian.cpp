@@ -9,6 +9,8 @@
 #include <argos3/plugins/simulator/entities/light_entity.h>
 #include<bits/stdc++.h>
 
+UInt32 CEPuckbrownian::num_robots_task_completed = 0;
+
 /****************************************/
 /****************************************/
 

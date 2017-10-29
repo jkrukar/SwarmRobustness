@@ -2,6 +2,10 @@
 #include <argos3/core/simulator/simulator.h>
 #include <argos3/core/utility/configuration/argos_configuration.h>
 #include <argos3/plugins/robots/e-puck/simulator/epuck_entity.h>
+#include <argos3/plugins/simulator/entities/proximity_sensor_equipped_entity.h>
+#include <argos3/plugins/simulator/entities/light_sensor_equipped_entity.h>
+#include <argos3/plugins/simulator/entities/wheeled_entity.h>
+#include <argos3/plugins/simulator/entities/rab_equipped_entity.h>
 #include <controllers/epuck_brownian/epuck_brownian.h>
 
 CBrownianLoopFunctions::CBrownianLoopFunctions() :
@@ -75,14 +79,24 @@ void CBrownianLoopFunctions::PostStep()
       {
         switch (f_case)
         {
-          case 1: c_epuck.SetEnabled(false);  // Shutdown Epuck
-                  break;
-          case 2: c_epuck.GetProximitySensorEquippedEntity().SetEnabled(false);  // Shutdown proximity sensor
-                  c_epuck.GetLightSensorEquippedEntity().SetEnabled(false); // Shutdown light sensor
-                  c_epuck.GetRABEquippedEntity().SetEnabled(false);  // Shutdown range and bearing sensor
-                  break;
-          case 3: c_epuck.GetWheeledEntity().SetEnabled(false);  // shutdown motors
-                  break;
+          case 1: {
+                    c_epuck.SetEnabled(false);  // Shutdown Epuck
+                    break;
+                  }
+          case 2: {
+                    CProximitySensorEquippedEntity& c_psee = c_epuck.GetProximitySensorEquippedEntity();
+                    c_psee.SetEnabled(false);  // Shutdown proximity sensor
+                    CLightSensorEquippedEntity& c_lsee = c_epuck.GetLightSensorEquippedEntity();
+                    c_lsee.SetEnabled(false); // Shutdown light sensor
+                    CRABEquippedEntity& c_rabee = c_epuck.GetRABEquippedEntity();
+                    c_rabee.SetEnabled(false);  // Shutdown range and bearing sensor
+                    break;
+                  }
+          case 3: {
+                    CWheeledEntity& c_we = c_epuck.GetWheeledEntity();
+                    c_we.SetEnabled(false);  // shutdown motors
+                    break;
+                  }
           default: break;
         }
         c_controller.setFailureStatus(true);
@@ -94,7 +108,8 @@ void CBrownianLoopFunctions::PostStep()
       total_position = total_position + e_pos;
     }
   }
-  Real distance = s_previous_center - (total_position / reliability_N) ;
+  total_position /= reliability_N;
+  Real distance = (s_previous_center - total_position).Length();
   s_distance = s_distance + abs(distance);  
 
   // Reset simulation once min 10 Epucks reached beacon, after 100 sims terminate
@@ -107,7 +122,7 @@ void CBrownianLoopFunctions::PostStep()
     s_run++;
 
     // After 100 simulations terminate
-    if (s_run == 101)
+    if (s_run > 100)
     {
       GetSimulator().Terminate();
     }

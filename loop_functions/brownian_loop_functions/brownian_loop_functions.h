@@ -11,7 +11,8 @@ class CBrownianLoopFunctions : public CLoopFunctions {
 public:
 
   CBrownianLoopFunctions(); 
-  virtual ~CBrownianLoopFunctions();
+  virtual ~CBrownianLoopFunctions() {}
+  virtual void Destroy();
   virtual void Reset();
   virtual void Init(TConfigurationNode& t_tree);
   virtual void PostStep();
