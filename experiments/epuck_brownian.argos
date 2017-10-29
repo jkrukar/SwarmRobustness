@@ -6,9 +6,9 @@
   <!-- ************************* -->
   <framework>
     <system threads="0" />
-    <experiment length="1500"
+    <experiment length="0"
                 ticks_per_second="10"
-                random_seed="0" />
+                random_seed="123" />
   </framework>
 
   <!-- *************** -->
@@ -24,10 +24,7 @@
       </actuators>
       <sensors>
         <proximity implementation="default" show_rays="true" />
-          <positioning implementation="default"
-            pos_noise_range="-0.1:0.2"
-            angle_noise_range="-10.5:13.7"
-            axis_noise_range="-0.3:0.4"/>
+          <positioning implementation="default" />
         <range_and_bearing implementation="medium" medium="rab" show_rays="true" />
         <eyebot_light implementation="rot_z_only" show_rays="true" />
       </sensors>
@@ -39,6 +36,18 @@
       </params>
     </epuck_brownian_controller>
   </controllers>
+
+  <!-- ****************** -->
+  <!-- * Loop functions * -->
+  <!-- * Reliability calculation - k 90% of N so 10% fail, N = number of Epucks * -->
+  <!-- ****************** -->
+  <loop_functions library="build/loop_functions/brownian_loop_functions/libbrownian_loop_functions"
+                  label="brownian_loop_functions">
+    <robustness failure_case="1"
+                k="1"
+                N="10"
+                output_file="case1count10.dat" />
+  </loop_functions>
 
   <!-- *********************** -->
   <!-- * Arena configuration * -->
