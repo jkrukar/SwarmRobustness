@@ -244,8 +244,8 @@ float getDistanceToGoal(CCI_PositioningSensor* m_pcPosSens){
 /*********************************************************************************************/
 void CEPuckbrownian::ControlStep() 
 {
-
-  if(reachedGoal){
+  if (reachedGoal == 1)
+  {
     return;
   }
 
@@ -322,7 +322,7 @@ void CEPuckbrownian::Reset()
   tickCounter = 0;
   reachedGoal = 0;
   beaconVisible = 0;
-  failure_case = 0;
+  is_failed = false;
 }
 
 

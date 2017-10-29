@@ -113,7 +113,12 @@ public:
     * Called by loop function sets failure case 0=none, 1, 2, 3
     */
    void setFailureCase(UInt32 num);
-   
+   UInt32 getFailureCase() { return failure_case; }
+   void setFailureTime(UInt32 num) { failure_time = num; }
+   UInt32 getFailureTime() { return failure_time; }
+   void setFailureStatus(bool failed) { is_failed = failed; }
+   bool getFailureStatus() { return is_failed; }  
+ 
    /*
     * Called by loop function determine if simulation is over
     */
@@ -143,20 +148,19 @@ private:
    /*Pointer to the light sensor*/
    CCI_EyeBotLightSensor* m_pcLightSens;
 
-   // Timer to change direction
-   int timerToTurn;
-
    // timer for last object avoided
    float obstacleAvoidance_timer;
 
-   int tickCounter=0;
+   int tickCounter = 0;
 
    int reachedGoal = 0;
 
    //Tracks beacon visibility state. If becaon is not visible 0, If beacon is visible 1.
    int beaconVisible = 0;
 
-   int failureCase = 0;
+   int failure_case = 0;
+   int failure_time = 0;
+   bool is_failed = false;
    
    /*
     * The following variables are used as parameters for the

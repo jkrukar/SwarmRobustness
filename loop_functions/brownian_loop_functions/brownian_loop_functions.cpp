@@ -7,6 +7,7 @@
 CBrownianLoopFunctions::CBrownianLoopFunctions() :
    c_fRNG(NULL),
    c_failure_range(1, 10),
+   c_failure_time(1, 1800),
    reliability_N(0),
    reliability_k(0),
    r_failure_case(1),
@@ -63,10 +64,35 @@ void CBrownianLoopFunctions::PostStep()
     // Get handle to Epuck entity and controller
     CEPuckEntity& c_epuck = *any_cast<CEPuckEntity*>(it->second);
     CEPuckbrownian& c_controller = dynamic_cast<CEPuckbrownian&>(c_epuck.GetControllableEntity().GetController());
-       
-    // Get the position of the Epuck on the ground as a CVector2
-    CVector2 e_pos = c_controller.getPosition();
-    total_position = total_position + e_pos;
+    s_time = GetSpace().GetSimulationClock();   
+
+    // Add distance
+    if (!c_controller.getFailureStatus())
+    {
+      // Check if failed
+      UInt32 f_case = c_controller.getFailureCase();
+      if (f_case > 0 && c_controller.getFailureTime() > s_time)
+      {
+        switch (f_case)
+        {
+          case 1: c_epuck.SetEnabled(false);  // Shutdown Epuck
+                  break;
+          case 2: c_epuck.GetProximitySensorEquippedEntity().SetEnabled(false);  // Shutdown proximity sensor
+                  c_epuck.GetLightSensorEquippedEntity().SetEnabled(false); // Shutdown light sensor
+                  c_epuck.GetRABEquippedEntity().SetEnabled(false);  // Shutdown range and bearing sensor
+                  break;
+          case 3: c_epuck.GetWheeledEntity().SetEnabled(false);  // shutdown motors
+                  break;
+          default: break;
+        }
+        c_controller.setFailureStatus(true);
+        continue;
+      }
+
+      // Get the position of the Epuck on the ground as a CVector2
+      CVector2 e_pos = c_controller.getPosition();
+      total_position = total_position + e_pos;
+    }
   }
   Real distance = s_previous_center - (total_position / reliability_N) ;
   s_distance = s_distance + abs(distance);  
@@ -74,8 +100,6 @@ void CBrownianLoopFunctions::PostStep()
   // Reset simulation once min 10 Epucks reached beacon, after 100 sims terminate
   if (CEPuckbrownian::getNumRobotsFinished() > 9)
   {
-    s_time = GetSpace().GetSimulationClock();
-
     // Append run# swarm-distance sim-time
     c_output << s_run << "\t" << s_distance << "\t" << s_time << std::endl;
     GetSimulator().Reset(123);
@@ -107,6 +131,7 @@ void CBrownianLoopFunctions::setFailureCasesInSwarm()
     if (c_fRNG->Uniform(c_failure_range) > 5)
     {
       c_controller.setFailureCase(r_failure_case);
+      c_controller.setFailureTime(c_fRNG->Uniform(c_failure_time));
       k_val_count++;
     }
     if (it == c_epuck_entities.end())

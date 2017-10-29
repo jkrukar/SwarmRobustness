@@ -20,6 +20,7 @@ private:
 
   CRandom::CRNG* c_fRNG;
   CRange<UInt32> c_failure_range;
+  CRange<UInt32> c_failure_time;
   UInt32 reliability_N; // Number of Epucks in simulation 10, 30, 50, 70, 100, 120
   UInt32 reliability_k; // 90% of N for k-out-of-N:G system (10% fail)
   UInt32 r_failure_case; // Current experiment failure case 1, 2, 3
