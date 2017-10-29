@@ -104,6 +104,22 @@ public:
     */
    virtual void Destroy() {}
 
+   /*
+    * Called by loop function to track distance swarm traveled
+    */
+   CVector2 getPosition();
+   
+   /*
+    * Called by loop function sets failure case 0=none, 1, 2, 3
+    */
+   void setFailureCase(UInt32 num);
+   
+   /*
+    * Called by loop function determine if simulation is over
+    */
+   static UInt32 getNumRobotsFinished() { return num_robots_task_completed; }
+   static void resetNumRobotsFinished() { num_robots_task_completed = 0; }
+
 protected:
 
 virtual CVector2 GetSwarmVelocity();
@@ -112,6 +128,7 @@ virtual CVector2 GetSwarmVelocity();
     */
 void SetWheelSpeedsFromVector(const CVector2& c_heading);
 
+static UInt32 num_robots_task_completed = 0;
 
 private:
 
@@ -138,6 +155,8 @@ private:
 
    //Tracks beacon visibility state. If becaon is not visible 0, If beacon is visible 1.
    int beaconVisible = 0;
+
+   int failureCase = 0;
    
    /*
     * The following variables are used as parameters for the

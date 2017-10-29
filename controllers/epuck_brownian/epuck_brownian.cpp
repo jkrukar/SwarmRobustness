@@ -94,6 +94,24 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
 }
 
 /*********************************************************************************************************/
+/* Called by loop function to track distance swarm traveled
+/*********************************************************************************************************/
+CVector2 CEPuckbrownian::getPosition()
+{
+  argos::CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
+  CVector3 currentPosition = positionSensorReading.Position;
+  return CVector2(currentPosition.GetX(), currentPosition.GetY());
+}
+
+/*********************************************************************************************************/
+/* Called by loop function sets failure case 0=none, 1, 2, 3
+/*********************************************************************************************************/
+void CEPuckbrownian::setFailureCase(UInt32 num)
+{
+  failure_case = num < 4 ? num : 0;
+}
+
+/*********************************************************************************************************/
 /* Averages the range and bearing sensor readings and outputs the average angle in radians.
 /*    The average angle is the angle towards the center of the swarm relative to the sensors orientation.
 /*********************************************************************************************************/
@@ -233,10 +251,13 @@ void CEPuckbrownian::ControlStep()
 
   float distanceToGoal = getDistanceToGoal(m_pcPosSens);
 
-  if(distanceToGoal <= 0.2){
-    std::clog << "Reached Goal @ "<< tickCounter << std::endl;
+  if(distanceToGoal <= 0.2)
+  {
+    // std::clog << "Reached Goal @ "<< tickCounter << std::endl;
     // argos::LOGERR << "Reached Goal!!!! @ "<< tickCounter << std::endl;
     reachedGoal = 1;
+    num_robots_task_completed++;
+    std::clog << num_robots_task_completed << " Epucks at Beacon" << std::endl;
   }
 
   tickCounter ++;
@@ -291,6 +312,19 @@ void CEPuckbrownian::ControlStep()
     }
   } 
 }
+
+/*************************************************************************************************************/
+/* This function resets the controller to its state right after the Init()
+/*************************************************************************************************************/
+void CEPuckbrownian::Reset()
+{
+  obstacleAvoidance_timer = 0;
+  tickCounter = 0;
+  reachedGoal = 0;
+  beaconVisible = 0;
+  failure_case = 0;
+}
+
 
 /*************************************************************************************************************/
 /*  Returns a vector that represents the required velocity to reach the swarms center from an inital position*/
