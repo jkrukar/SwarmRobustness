@@ -43,7 +43,7 @@
   <!-- ****************** -->
   <loop_functions library="build/loop_functions/brownian_loop_functions/libbrownian_loop_functions"
                   label="brownian_loop_functions">
-    <robustness failure_case="1"
+    <robustness failure_case="3"
                 k="1"
                 N="10"
                 output_file="case1count10.dat" />

@@ -44,6 +44,7 @@ CEPuckbrownian::CEPuckbrownian() :
    m_fWheelVelocity(10.0f) {}
    
 
+
 /****************************************/
 /****************************************/
 
@@ -96,7 +97,6 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
 }
 
 /*********************************************************************************************************/
-/* Called by loop function to track distance swarm traveled
 /*********************************************************************************************************/
 CVector2 CEPuckbrownian::getPosition()
 {
@@ -105,12 +105,42 @@ CVector2 CEPuckbrownian::getPosition()
   return CVector2(currentPosition.GetX(), currentPosition.GetY());
 }
 
-/*********************************************************************************************************/
-/* Called by loop function sets failure case 0=none, 1, 2, 3
-/*********************************************************************************************************/
-void CEPuckbrownian::setFailureCase(UInt32 num)
+void CEPuckbrownian::generateFailure()
 {
-  failure_case = num < 4 ? num : 0;
+  switch (failure_case)
+  {
+    case 1: {
+              is_wheels_failed = true;
+              is_lights_sensor_failed = true;
+              is_range_bearing_failed = true;
+              is_proximity_sensor_failed = true;
+              break;
+            }
+    case 2: {
+              is_lights_sensor_failed = true;
+              is_range_bearing_failed = true;
+              is_proximity_sensor_failed = true;
+              break;
+            }
+    case 3: {
+              is_wheels_failed = true;
+              break;
+            }
+    default: break;
+  }
+}
+
+void CEPuckbrownian::SetLinearVelocity(Real f_left_velocity, Real f_right_velocity)
+{
+  if (!is_wheels_failed)
+  {
+    this->SetLinearVelocity(f_left_velocity, f_right_velocity);
+  }
+  else
+  {
+    this->SetLinearVelocity(0.0f, 0.0f);
+
+  }
 }
 
 /*********************************************************************************************************/
@@ -324,7 +354,10 @@ void CEPuckbrownian::Reset()
   tickCounter = 0;
   reachedGoal = 0;
   beaconVisible = 0;
-  is_failed = false;
+  is_wheels_failed = false;
+  is_lights_sensor_failed = false;
+  is_range_bearing_failed = false;
+  is_proximity_sensor_failed = false;
 }
 
 

@@ -71,35 +71,12 @@ void CBrownianLoopFunctions::PostStep()
     s_time = GetSpace().GetSimulationClock();   
 
     // Add distance
-    if (!c_controller.getFailureStatus())
+    if (!c_controller.isFailed())
     {
-      // Check if failed
-      UInt32 f_case = c_controller.getFailureCase();
-      if (f_case > 0 && c_controller.getFailureTime() > s_time)
+      //-i Check if failed
+      if (c_controller.getFailureCase() > 0 && c_controller.getFailureTime() > s_time)
       {
-        switch (f_case)
-        {
-          case 1: {
-                    c_epuck.SetEnabled(false);  // Shutdown Epuck
-                    break;
-                  }
-          case 2: {
-                    CProximitySensorEquippedEntity& c_psee = c_epuck.GetProximitySensorEquippedEntity();
-                    c_psee.SetEnabled(false);  // Shutdown proximity sensor
-                    CLightSensorEquippedEntity& c_lsee = c_epuck.GetLightSensorEquippedEntity();
-                    c_lsee.SetEnabled(false); // Shutdown light sensor
-                    CRABEquippedEntity& c_rabee = c_epuck.GetRABEquippedEntity();
-                    c_rabee.SetEnabled(false);  // Shutdown range and bearing sensor
-                    break;
-                  }
-          case 3: {
-                    CWheeledEntity& c_we = c_epuck.GetWheeledEntity();
-                    c_we.SetEnabled(false);  // shutdown motors
-                    break;
-                  }
-          default: break;
-        }
-        c_controller.setFailureStatus(true);
+        c_controller.generateFailure();
         continue;
       }
 
@@ -121,8 +98,8 @@ void CBrownianLoopFunctions::PostStep()
     CEPuckbrownian::resetNumRobotsFinished();
     s_run++;
 
-    // After 100 simulations terminate
-    if (s_run > 100)
+    //-i After 100 simulations terminate
+    if (s_run > 1)
     {
       GetSimulator().Terminate();
     }
@@ -142,11 +119,13 @@ void CBrownianLoopFunctions::setFailureCasesInSwarm()
     CEPuckEntity& c_epuck = *any_cast<CEPuckEntity*>(it->second);
     CEPuckbrownian& c_controller = dynamic_cast<CEPuckbrownian&>(c_epuck.GetControllableEntity().GetController());
 
-    // Randomly set fail case
+    //-i Randomly set fail case
     if (c_fRNG->Uniform(c_failure_range) > 5)
     {
       c_controller.setFailureCase(r_failure_case);
-      c_controller.setFailureTime(c_fRNG->Uniform(c_failure_time));
+      UInt32 c_fail = c_fRNG->Uniform(c_failure_time);
+      c_controller.setFailureTime(c_fail);
+      std::clog << "failure case=" << r_failure_case << " timestep=" << c_fail << std::endl;
       k_val_count++;
     }
     if (it == c_epuck_entities.end())
