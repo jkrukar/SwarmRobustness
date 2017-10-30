@@ -47,9 +47,10 @@ attributes in the .argos XML file.
 1. failure_case - 1 is complete failure, 2 is sensors failure, and 3 is motor failure
 2. k - the number of Epucks that will fail (10% according to experiment)
 3. N - the total number of Epucks in experiment (should equal quantity attribute)
-4. layout - grid layout of Epucks (must add up to quantity attribute)
-5. quantity - the total number of Epucks in experiment
-6. In order to run multiple simulations, comment out the <visualization> tag
+4. output_file - contains simulation run#, distance traveled by swarm, and total time to reach beacon
+5. layout - grid layout of Epucks (must add up to quantity attribute)
+6. quantity - the total number of Epucks in experiment
+7. in order to run multiple simulations, comment out the <visualization> tag
 Note - If running with visualizations on, ignore "QCoreApplication::exec: The event loop is already running"
 warning in console.
 
