@@ -49,6 +49,9 @@ attributes in the .argos XML file.
 3. N - the total number of Epucks in experiment (should equal quantity attribute)
 4. layout - grid layout of Epucks (must add up to quantity attribute)
 5. quantity - the total number of Epucks in experiment
+6. In order to run multiple simulations, comment out the <visualization> tag
+Note - If running with visualizations on, ignore "QCoreApplication::exec: The event loop is already running"
+warning in console.
 
 
 ## Licensing
