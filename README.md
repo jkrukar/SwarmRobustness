@@ -36,7 +36,8 @@ See paper.
 ## Installation
 1. Download files to a location of your choice from:
 GitHub: https://github.com/jkrukar/SwarmRobustness.git
-2. In the root directory run: ./build.sh
+2. Change to the release version: git checkout finalMaster
+3. In the root directory run: ./build.sh
 
 
 ## Instructions:
@@ -61,7 +62,7 @@ FREE
 
 ## Troubleshooting
 For ARGOS errors see ARGOS help documentation at http://www.argos-sim.info/documentation.php
-
+If you get an error while executing build.sh and you are working from a windows host, use dos2unix to remove windows characters.
 
 ## Contacts
 Akil Andrews - akil.andrews@gmail.com

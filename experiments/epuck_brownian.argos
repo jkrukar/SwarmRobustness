@@ -17,7 +17,7 @@
   <controllers>
 
     <epuck_brownian_controller id="fdc"
-                                        library="build/controllers/epuck_brownian/libepuck_brownian.so">
+                                        library="build/controllers/epuck_brownian/libepuck_brownian">
       <actuators>
         <differential_steering implementation="default" />
         <leds                  implementation="default" medium="leds" />
