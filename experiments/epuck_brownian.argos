@@ -5,7 +5,7 @@
   <!-- * General configuration * -->
   <!-- ************************* -->
   <framework>
-    <system threads="2" />
+    <system threads="8" />
     <experiment length="0"
                 ticks_per_second="10"
                 random_seed="1230987045" />
@@ -43,10 +43,10 @@
   <!-- ****************** -->
   <loop_functions library="build/loop_functions/brownian_loop_functions/libbrownian_loop_functions"
                   label="brownian_loop_functions">
-    <robustness failure_case="3"
+    <robustness failure_case="2"
                 k="5"
                 N="50"
-                output_file="case3count50.dat" />
+                output_file="case2count50.dat" />
   </loop_functions>
 
   <!-- *********************** -->
@@ -116,7 +116,7 @@
   <!-- * Visualization * -->
   <!-- ****************** -->
   <visualization>
-    <!-- <qt-opengl>
+   <!-- <qt-opengl>
       <camera>
         <placement idx="0"
                    position="0.0,-3.0,4.0"
