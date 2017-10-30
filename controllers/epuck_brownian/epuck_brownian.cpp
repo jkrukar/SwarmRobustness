@@ -147,22 +147,20 @@ void CEPuckbrownian::SetLinearVelocity(Real f_left_velocity, Real f_right_veloci
 
 bool CEPuckbrownian::determineIfFailedEpuck(float f_angle, float f_range)
 {
-  //-i Failure case 1, 2 - disable sensors
+  // Failure case 1, 2 - disable sensors
   CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
   CVector3 currentPosition = positionSensorReading.Position;
  
-  float calc_x = f_range * cos(f_angle) + currentPosition.GetX();
-  float calc_y = f_range * sin(f_angle) + currentPosition.GetY();
-  std::clog << "range=" << f_range << " angle=" << (f_angle*M_PI/180) << std::endl;
-
+  float calc_x = (f_range * 1e-2) * cos(f_angle) + currentPosition.GetX();
+  float calc_y = (f_range * 1e-2) * sin(f_angle) + currentPosition.GetY();
   for (std::vector<CVector2>::iterator it = failed_epuck_list.begin() ; it != failed_epuck_list.end(); ++it)
   {
     CVector2 temp = CVector2(calc_x, calc_y) - *it;
-    //std::clog << "epos=" << CVector2(calc_x, calc_y) << " rabpos=" << *it << std::endl;
-    /*if (temp.Length() < 0.1)
+    if (temp.Length() < 0.01)
     {
+      //std::clog << "dist=" << temp.Length() << " " <<  CVector2(calc_x, calc_y) << " " << *it << std::endl;
       return true;
-    }*/
+    }
   }
 
   return false;
@@ -185,14 +183,13 @@ CVector2 CEPuckbrownian::getVectorToSwarm(CCI_RangeAndBearingSensor* m_pcRABSens
 
   for(int i=0;i<rabReadingCount;i++){
 
-    nextAngle = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
-
     // If failure case 1, 2 ignore epuck in center swarm calculation
-    if (determineIfFailedEpuck(nextAngle, rabReadings[i].Range))
+    if (determineIfFailedEpuck(rabReadings[i].HorizontalBearing.GetValue(), rabReadings[i].Range))
     {
       continue;
     }
     
+    nextAngle = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
     averageDistance += rabReadings[i].Range;
 
     /*Add sin and cos values of the angle to the sin and cos total.*/
