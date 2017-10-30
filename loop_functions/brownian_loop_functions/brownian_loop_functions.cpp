@@ -101,7 +101,7 @@ void CBrownianLoopFunctions::PostStep()
     if (!c_controller.isFailed())
     {
       // Check if failed
-      if (c_controller.getFailureCase() > 0 && c_controller.getFailureTime() > s_time)
+      if (c_controller.getFailureCase() > 0 && c_controller.getFailureTime() < s_time)
       {
         c_controller.generateFailure();
         continue;
