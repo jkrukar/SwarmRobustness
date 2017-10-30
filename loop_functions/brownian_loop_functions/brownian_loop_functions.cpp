@@ -17,7 +17,7 @@ CBrownianLoopFunctions::CBrownianLoopFunctions() :
    r_failure_case(0),
    s_run(1),
    s_time(0),
-   s_distance(0),
+   s_distance(0.0f),
    s_num_to_complete(0),
    s_previous_center(0.0f, 2.0f) {
 }
@@ -30,7 +30,7 @@ void CBrownianLoopFunctions::Destroy()
 void CBrownianLoopFunctions::Reset()
 {
   s_time = 0;
-  s_distance = 0;
+  s_distance = 0.0f;
   s_previous_center= CVector2(0.0f, 2.0f);
   setFailureCasesInSwarm();
 }
@@ -114,7 +114,7 @@ void CBrownianLoopFunctions::PostStep()
   }
   total_position /= reliability_N;
   Real distance = (s_previous_center - total_position).Length();
-  s_distance = s_distance + abs(distance);
+  s_distance = s_distance + fabs(distance);
   s_previous_center = total_position;  
 
   // Reset simulation once min 50% N within 200cm of beacon, terminate after 100 sims exit
