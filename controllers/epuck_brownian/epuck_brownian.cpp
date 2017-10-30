@@ -10,6 +10,7 @@
 #include<bits/stdc++.h>
 
 UInt32 CEPuckbrownian::num_robots_task_completed = 0;
+std::vector<CVector2> CEPuckbrownian::failed_epuck_list = {};
 
 /****************************************/
 /****************************************/
@@ -97,10 +98,11 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
 }
 
 /*********************************************************************************************************/
+/* Loop function support and fail case implementation */
 /*********************************************************************************************************/
 CVector2 CEPuckbrownian::getPosition()
 {
-  argos::CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
+  CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
   CVector3 currentPosition = positionSensorReading.Position;
   return CVector2(currentPosition.GetX(), currentPosition.GetY());
 }
@@ -134,20 +136,43 @@ void CEPuckbrownian::SetLinearVelocity(Real f_left_velocity, Real f_right_veloci
 {
   if (!is_wheels_failed)
   {
-    this->SetLinearVelocity(f_left_velocity, f_right_velocity);
+    m_pcWheels->SetLinearVelocity(f_left_velocity, f_right_velocity);
   }
   else
   {
-    this->SetLinearVelocity(0.0f, 0.0f);
-
+    // Failure case 1, 3
+    m_pcWheels->SetLinearVelocity(0.0f, 0.0f);
   }
+}
+
+bool CEPuckbrownian::determineIfFailedEpuck(float f_angle, float f_range)
+{
+  //-i Failure case 1, 2 - disable sensors
+  CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
+  CVector3 currentPosition = positionSensorReading.Position;
+ 
+  float calc_x = f_range * cos(f_angle) + currentPosition.GetX();
+  float calc_y = f_range * sin(f_angle) + currentPosition.GetY();
+  std::clog << "range=" << f_range << " angle=" << (f_angle*M_PI/180) << std::endl;
+
+  for (std::vector<CVector2>::iterator it = failed_epuck_list.begin() ; it != failed_epuck_list.end(); ++it)
+  {
+    CVector2 temp = CVector2(calc_x, calc_y) - *it;
+    //std::clog << "epos=" << CVector2(calc_x, calc_y) << " rabpos=" << *it << std::endl;
+    /*if (temp.Length() < 0.1)
+    {
+      return true;
+    }*/
+  }
+
+  return false;
 }
 
 /*********************************************************************************************************/
 /* Averages the range and bearing sensor readings and outputs the average angle in radians.
 /*    The average angle is the angle towards the center of the swarm relative to the sensors orientation.
 /*********************************************************************************************************/
-CVector2 getVectorToSwarm(CCI_RangeAndBearingSensor* m_pcRABSens){
+CVector2 CEPuckbrownian::getVectorToSwarm(CCI_RangeAndBearingSensor* m_pcRABSens){
 
   CVector2 vectorToSwarm;
   float averageAngle = 0;
@@ -161,6 +186,13 @@ CVector2 getVectorToSwarm(CCI_RangeAndBearingSensor* m_pcRABSens){
   for(int i=0;i<rabReadingCount;i++){
 
     nextAngle = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
+
+    // If failure case 1, 2 ignore epuck in center swarm calculation
+    if (determineIfFailedEpuck(nextAngle, rabReadings[i].Range))
+    {
+      continue;
+    }
+    
     averageDistance += rabReadings[i].Range;
 
     /*Add sin and cos values of the angle to the sin and cos total.*/
@@ -294,6 +326,18 @@ void CEPuckbrownian::ControlStep()
 
   tickCounter ++;
 
+  // Failure case 1, 3
+  if (is_wheels_failed)
+  {
+    this->SetLinearVelocity(0.0f, 0.0f);
+  }
+
+  // Failure case 1, 2
+  if (is_lights_sensor_failed &&  is_range_bearing_failed &&  is_proximity_sensor_failed)
+  {
+    return;
+  }
+
   int beaconVisible = checkBeaconVisibility(m_pcLightSens);
   float repulsionThreshold;
   CVector2 vectorToNearestBot = getVectorToNearestBot(m_pcRABSens);
@@ -319,12 +363,12 @@ void CEPuckbrownian::ControlStep()
       //If radians are negative: the obstacle is to the right, turn left.
       if(radiansToNearestBot<0){
 
-        m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
+        this->SetLinearVelocity(0.0f, m_fWheelVelocity);
       }
       //Else the obstacle is to the left, turn right.
       else{
 
-        m_pcWheels->SetLinearVelocity(m_fWheelVelocity, 0.0f);
+        this->SetLinearVelocity(m_fWheelVelocity, 0.0f);
       }
     }
   }else{
@@ -340,7 +384,7 @@ void CEPuckbrownian::ControlStep()
 
     }else{
 
-      m_pcWheels->SetLinearVelocity(m_fWheelVelocity, m_fWheelVelocity); //Keep going straight
+      this->SetLinearVelocity(m_fWheelVelocity, m_fWheelVelocity); //Keep going straight
     }
   } 
 }
@@ -456,7 +500,7 @@ void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading) {
       fRightWheelSpeed = fSpeed1;
    }
    /* Finally, set the wheel speeds */
-   m_pcWheels->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
+   this->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
 }
 /*********************************************************************************************/
 /*********************************************************************************************/

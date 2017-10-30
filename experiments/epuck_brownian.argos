@@ -8,7 +8,7 @@
     <system threads="0" />
     <experiment length="0"
                 ticks_per_second="10"
-                random_seed="123" />
+                random_seed="1230987045" />
   </framework>
 
   <!-- *************** -->
@@ -43,7 +43,7 @@
   <!-- ****************** -->
   <loop_functions library="build/loop_functions/brownian_loop_functions/libbrownian_loop_functions"
                   label="brownian_loop_functions">
-    <robustness failure_case="3"
+    <robustness failure_case="1"
                 k="1"
                 N="10"
                 output_file="case1count10.dat" />
@@ -115,7 +115,14 @@
   <!-- * Visualization * -->
   <!-- ****************** -->
   <visualization>
-    <qt-opengl />
+    <qt-opengl>
+      <camera>
+        <placement idx="0"
+                   position="0.0,-3.0,4.0"
+                   look_at="0.0,-3.0,0.1"
+                   up="0.0,0.1,0.1"
+                   lens_focal_length="20" />
+      </camera>
+    </qt-opengl>
   </visualization>
-
 </argos-configuration>

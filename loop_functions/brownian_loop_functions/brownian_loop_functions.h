@@ -12,9 +12,10 @@ public:
 
   CBrownianLoopFunctions(); 
   virtual ~CBrownianLoopFunctions() {}
-  virtual void Destroy();
+  virtual void Destroy(); 
   virtual void Reset();
   virtual void Init(TConfigurationNode& t_tree);
+  virtual void PreStep();
   virtual void PostStep();
 
 private:
@@ -27,6 +28,7 @@ private:
   UInt32 r_failure_case; // Current experiment failure case 1, 2, 3
   UInt32 s_run; // Current simulation number 1 - 100
   UInt32 s_time; // Total run time of simulation
+  UInt32 s_num_to_complete;  // Number of Epucks required to reach beacon to terminate (50% within 200cm)
   Real s_distance; // Total distance traveled by swarm (measured by center of swarm)
   CVector2 s_previous_center; // Previous center of swarm position
   std::string str_output;

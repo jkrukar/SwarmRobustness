@@ -117,6 +117,7 @@ public:
    void setFailureTime(UInt32 num) { failure_time = num; }
    UInt32 getFailureTime() { return failure_time; }
    bool isFailed() { return is_wheels_failed || is_lights_sensor_failed || is_range_bearing_failed || is_proximity_sensor_failed; }
+   bool isSensorsFailed() { return is_lights_sensor_failed || is_range_bearing_failed || is_proximity_sensor_failed; }
    void generateFailure();
  
    /*
@@ -125,11 +126,13 @@ public:
    static UInt32 num_robots_task_completed;
    static UInt32 getNumRobotsFinished() { return num_robots_task_completed; }
    static void resetNumRobotsFinished() { num_robots_task_completed = 0; }
-
+   
    /*
-    * Overwritten methods to that implement fail cases
+    * Methods implementing fail cases
     */
+   static std::vector<CVector2> failed_epuck_list;
    virtual void SetLinearVelocity(Real f_left_velocity, Real f_right_velocity);
+   bool determineIfFailedEpuck(float f_angle, float f_range);
 
 protected:
 
@@ -138,6 +141,8 @@ virtual CVector2 GetSwarmVelocity();
     * Gets a direction vector as input and transforms it into wheel actuation.
     */
 void SetWheelSpeedsFromVector(const CVector2& c_heading);
+
+CVector2 getVectorToSwarm(CCI_RangeAndBearingSensor* sensor);
 
 private:
 
@@ -160,7 +165,7 @@ private:
    // Tracks beacon visibility state. If becaon is not visible 0, If beacon is visible 1.
    int beaconVisible = 0;
 
-   // Failure status
+   // Variables implementing fail cases
    int failure_case = 0;
    int failure_time = 0;
    bool is_wheels_failed = false;
@@ -179,9 +184,6 @@ private:
 
    /* The turning parameters. */
    SWheelTurningParams m_sWheelTurningParams;
-
- 
-
 };
 
 #endif
