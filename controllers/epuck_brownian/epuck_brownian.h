@@ -28,11 +28,11 @@
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h>
 /* Definition of the eye-bot light sensor */
 #include <argos3/plugins/robots/eye-bot/control_interface/ci_eyebot_light_sensor.h>
+/* Definition of the LEDs actuator */
+#include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
 
-/*
- * All the ARGoS stuff in the 'argos' namespace.
- * With this statement, you save typing argos:: every time.
- */
+
+
 using namespace argos;
 
 /*
@@ -41,7 +41,6 @@ using namespace argos;
 class CEPuckbrownian : public CCI_Controller {
 
 public:
-
 
   struct SWheelTurningParams {
       /*
@@ -137,6 +136,10 @@ public:
 protected:
 
 virtual CVector2 GetSwarmVelocity();
+/*
+    * Calculates the flocking interaction vector.
+    */
+  
    /*
     * Gets a direction vector as input and transforms it into wheel actuation.
     */
@@ -156,6 +159,8 @@ private:
    CCI_RangeAndBearingSensor* m_pcRABSens;
    /*Pointer to the light sensor*/
    CCI_EyeBotLightSensor* m_pcLightSens;
+   /* Pointer to the LEDs actuator */
+   CCI_LEDsActuator* m_pcLEDs;
 
    // Timer for last object avoided
    float obstacleAvoidance_timer;

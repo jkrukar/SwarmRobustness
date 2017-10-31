@@ -71,7 +71,7 @@
            position="0,-3,0.1"
            orientation="0,0,0"
            color="red"
-           intensity="100"
+           intensity="1"
            medium="leds" />
 
     <!--
