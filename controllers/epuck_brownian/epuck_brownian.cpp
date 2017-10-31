@@ -4,8 +4,13 @@
 #include <argos3/core/utility/configuration/argos_configuration.h>
 #include <argos3/core/utility/logging/argos_log.h>
 #include <cmath>
+#include <argos3/core/simulator/space/space.h>
+#include <argos3/core/simulator/simulator.h>
+#include <argos3/plugins/simulator/entities/light_entity.h>
 #include<bits/stdc++.h>
 
+UInt32 CEPuckbrownian::num_robots_task_completed = 0;
+std::vector<CVector2> CEPuckbrownian::failed_epuck_list = {};
 
 /****************************************/
 /****************************************/
@@ -27,8 +32,7 @@ void CEPuckbrownian::SWheelTurningParams::Init(TConfigurationNode& t_node) {
    }
 }
 
-/****************************************/
-/****************************************/
+
 /****************************************/
 /****************************************/
 
@@ -38,9 +42,9 @@ CEPuckbrownian::CEPuckbrownian() :
    m_pcRABSens(NULL),
    m_pcLightSens(NULL),
    m_pcPosSens(NULL),
-   m_pcLEDs(NULL),
-   m_fWheelVelocity(2.5f) {}
+   m_fWheelVelocity(10.0f) {}
    
+
 
 /****************************************/
 /****************************************/
@@ -72,46 +76,129 @@ void CEPuckbrownian::Init(TConfigurationNode& t_node) {
    m_pcProximity = GetSensor  <CCI_ProximitySensor             >("proximity"    );
    m_pcPosSens = GetSensor  <CCI_PositioningSensor             >("positioning"    );
    m_pcRABSens   = GetSensor  <CCI_RangeAndBearingSensor    >("range_and_bearing" );
-   m_pcLEDs   = GetActuator<CCI_LEDsActuator                          >("leds");
    m_pcLightSens = GetSensor  <CCI_EyeBotLightSensor        >("eyebot_light"      );
 
 
-
-try {
-      /* Wheel turning */
-      m_sWheelTurningParams.Init(GetNode(t_node, "wheel_turning"));
-   }
-   catch(CARGoSException& ex) {
-      THROW_ARGOSEXCEPTION_NESTED("Error parsing the controller parameters.", ex);
-   }
-
+   /*
+    * Parse the configuration file
+    *
+    * The user defines this part. Here, the algorithm accepts three
+    * parameters and it's nice to put them in the config file so we don't
+    * have to recompile if we want to try other settings.
+    */
    GetNodeAttributeOrDefault(t_node, "velocity", m_fWheelVelocity, m_fWheelVelocity);
-   //m_pcLEDs->SetSingleColor(12, CColor::RED);
+
+  try {
+     /* Wheel turning */
+     m_sWheelTurningParams.Init(GetNode(t_node, "wheel_turning"));
+  }
+  catch(CARGoSException& ex) {
+     THROW_ARGOSEXCEPTION_NESTED("Error parsing the controller parameters.", ex);
+  }
+}
+
+/*********************************************************************************************************/
+/* Loop function support and fail case implementation */
+/*********************************************************************************************************/
+CVector2 CEPuckbrownian::getPosition()
+{
+  CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
+  CVector3 currentPosition = positionSensorReading.Position;
+  return CVector2(currentPosition.GetX(), currentPosition.GetY());
+}
+
+void CEPuckbrownian::generateFailure()
+{
+  switch (failure_case)
+  {
+    case 1: {
+              is_wheels_failed = true;
+              is_lights_sensor_failed = true;
+              is_range_bearing_failed = true;
+              is_proximity_sensor_failed = true;
+              break;
+            }
+    case 2: {
+              is_lights_sensor_failed = true;
+              is_range_bearing_failed = true;
+              is_proximity_sensor_failed = true;
+              break;
+            }
+    case 3: {
+              is_wheels_failed = true;
+              break;
+            }
+    default: break;
+  }
+}
+
+void CEPuckbrownian::SetLinearVelocity(Real f_left_velocity, Real f_right_velocity)
+{
+  if (!is_wheels_failed)
+  {
+    m_pcWheels->SetLinearVelocity(f_left_velocity, f_right_velocity);
+  }
+  else
+  {
+    // Failure case 1, 3
+    m_pcWheels->SetLinearVelocity(0.0f, 0.0f);
+  }
+}
+
+bool CEPuckbrownian::determineIfFailedEpuck(float f_angle, float f_range)
+{
+  // Failure case 1, 2 - disable sensors
+  CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
+  CVector3 currentPosition = positionSensorReading.Position;
+ 
+  float calc_x = (f_range * 1e-2) * cos(f_angle) + currentPosition.GetX();
+  float calc_y = (f_range * 1e-2) * sin(f_angle) + currentPosition.GetY();
+  for (std::vector<CVector2>::iterator it = failed_epuck_list.begin() ; it != failed_epuck_list.end(); ++it)
+  {
+    CVector2 temp = CVector2(calc_x, calc_y) - *it;
+    if (temp.Length() < 0.01)
+    {
+      //std::clog << "dist=" << temp.Length() << " " <<  CVector2(calc_x, calc_y) << " " << *it << std::endl;
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /*********************************************************************************************************/
 /* Averages the range and bearing sensor readings and outputs the average angle in radians.
 /*    The average angle is the angle towards the center of the swarm relative to the sensors orientation.
 /*********************************************************************************************************/
-float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
+CVector2 CEPuckbrownian::getVectorToSwarm(CCI_RangeAndBearingSensor* m_pcRABSens){
 
-  float averageRadians = 0;
-
-  //Get average of range and bearing sensor readings
+  CVector2 vectorToSwarm;
+  float averageAngle = 0;
+  float averageDistance = 0;
   argos::CCI_RangeAndBearingSensor::TReadings rabReadings = m_pcRABSens->GetReadings();
   int rabReadingCount = rabReadings.size();
-  float nextReading = 0;
+  float nextAngle = 0;
   float sinMean = 0;
   float cosMean = 0;
 
   for(int i=0;i<rabReadingCount;i++){
 
-    nextReading = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
+    // If failure case 1, 2 ignore epuck in center swarm calculation
+    if (determineIfFailedEpuck(rabReadings[i].HorizontalBearing.GetValue(), rabReadings[i].Range))
+    {
+      continue;
+    }
+    
+    nextAngle = rabReadings[i].HorizontalBearing.UnsignedNormalize().GetValue();
+    averageDistance += rabReadings[i].Range;
 
     /*Add sin and cos values of the angle to the sin and cos total.*/
-    sinMean += sin(nextReading);
-    cosMean += cos(nextReading);
+    sinMean += sin(nextAngle);
+    cosMean += cos(nextAngle);
   }
+
+  /*Average the distance*/
+  averageDistance /=rabReadingCount;
 
   /*Divide the sin and cos total by the number of readings to get the average*/
   sinMean /= rabReadingCount;
@@ -122,69 +209,198 @@ float getRadiansToSwarmCenter(CCI_RangeAndBearingSensor* m_pcRABSens){
   cosMean = cosMean*M_PI/180;
 
   /*Take the arctangent to get the mean angle*/
-  averageRadians = atan(sinMean/cosMean);
+  averageAngle = atan(sinMean/cosMean);
 
   if(cosMean < 0){
-    averageRadians += M_PI;
+    averageAngle += M_PI;
   }else if(sinMean < 0){
-    averageRadians += M_PI*2;
+    averageAngle += M_PI*2;
   }
 
-  /*TODO: Remove eventually. Left in for debugging/demonstration purposes*/
-  float averageAngle = averageRadians*180/M_PI;
-  
-  //argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
+  vectorToSwarm = CVector2(averageDistance,CRadians(averageAngle));
 
-  return averageRadians;
+  /*TODO: Remove eventually. Left in for debugging/demonstration purposes*/
+  // float averageAngle = averageAngle*180/M_PI;
+  // argos::LOG << "averageAngle = " << averageAngle << "'" << std::endl;
+
+  return vectorToSwarm;
 }
+
+/****************************************************************************************/
+/* Returns a float equal to the distance between the bot and the nearest detectable bot.
+/* Used to evaluate when a threshold for short range repulsion has been exceeded.
+/* TODO: this function might need to be scrapped. I used it for testing purposes.
+/* Could be used to detect collisions instead of proximity sensor if needed.      
+/****************************************************************************************/
+argos::CVector2 getVectorToNearestBot(CCI_RangeAndBearingSensor* m_pcRABSens){
+
+  CVector2 vectorToNearestBot;
+  Real distanceToNearestBot = 80; //Set to the max range of the RAB sensor.
+  CRadians radiansToNearestBot;
+  argos::CCI_RangeAndBearingSensor::TReadings rabReadings = m_pcRABSens->GetReadings();
+  int rabReadingCount = rabReadings.size();
+  float nextDistance = 0;
+
+  for(int i=0;i<rabReadingCount;i++){
+
+    nextDistance = rabReadings[i].Range;
+
+    if(nextDistance < distanceToNearestBot){
+      distanceToNearestBot = nextDistance;
+      radiansToNearestBot = CRadians(rabReadings[i].HorizontalBearing.GetValue());
+    }
+  }
+
+  // radiansToNearestBot = CRadians(radiansToNearestBot);
+
+  vectorToNearestBot = CVector2(distanceToNearestBot,radiansToNearestBot);
+
+  // argos::LOG << "nearestDistanceToBot = " << vectorToNearestBot << std::endl;
+
+  return vectorToNearestBot;
+}
+
+/*********************************************************************************/
+/* Returns 1 if the beacon is visible to this bot, else returns 0.               */
+/* To be used as a check to increase short range repulsion for symmetry breaking.*/
+/*********************************************************************************/
+int checkBeaconVisibility(CCI_EyeBotLightSensor* m_pcLightSens){
+
+  int lightSensorState=0;
+  float nextReading=0.0f;
+  argos::CCI_EyeBotLightSensor::TReadings lightSensorReading = m_pcLightSens->GetReadings();
+  int lightReadingCount = lightSensorReading.size();
+  
+  for(int i=0;i<lightReadingCount;i++){
+
+    nextReading = lightSensorReading[i].Value;
+
+    if(nextReading > 0){
+      lightSensorState = 1;
+      i=lightReadingCount; //Exit loop, if at least one sensor is illuminated
+    }
+    else
+    {
+      lightSensorState = 0;
+    }
+  }
+
+ // argos::LOG << "lightSensorState = " << lightSensorState << std::endl;
+
+  return lightSensorState;
+}
+/*********************************************************************************************/
+/*********************************************************************************************/
+float getDistanceToGoal(CCI_PositioningSensor* m_pcPosSens){
+  argos::CCI_PositioningSensor::SReading positionSensorReading = m_pcPosSens->GetReading();
+  CVector3 currentPosition = positionSensorReading.Position;
+  CVector3 goalPosition = CVector3(0,-3,0); //Hard coded in since it was tricky to get a pointer to the light entity.
+  CVector3 distanceToGoal = currentPosition - goalPosition;
+
+  return distanceToGoal.Length();
+}
+
+
 /*********************************************************************************************/
 /*********************************************************************************************/
 void CEPuckbrownian::ControlStep() 
 {
-   /* Get the highest reading in front of the robot, which corresponds to the closest object 
-   Real fMaxReadVal  = m_pcProximity->GetReadings()[1];
-   UInt32 unMaxReadIdx = 0;
-  
-       argos::LOG << "Distance to object = " << fMaxReadVal  << "'" << std::endl;
-   if(fMaxReadVal < m_pcProximity->GetReadings()[1]) {
-      fMaxReadVal = m_pcProximity->GetReadings()[1];
-      unMaxReadIdx = 1;
-   }
-   if(fMaxReadVal < m_pcProximity->GetReadings()[7]) {
-      fMaxReadVal = m_pcProximity->GetReadings()[7];
-      unMaxReadIdx = 7;
-   }
-   if(fMaxReadVal < m_pcProximity->GetReadings()[6]) {
-      fMaxReadVal = m_pcProximity->GetReadings()[6];
-      unMaxReadIdx = 6;
-   }
-   /* Do we have an obstacle in front? 
-   if(fMaxReadVal > 0.0f) {
-     obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
-     /* Yes, we do: avoid it 
-     if(unMaxReadIdx == 0 || unMaxReadIdx == 1) {
-       /* The obstacle is on the left, turn right 
-       m_pcWheels->SetLinearVelocity(m_fWheelVelocity, 0.0f);
-       
-     }
-     else {
-       /* The obstacle is on the left, turn right 
-       m_pcWheels->SetLinearVelocity(0.0f, m_fWheelVelocity);
-     }
-   }
+  if (reachedGoal == 1)
+  {
+    return;
+  }
 
-  
-   else {
-     obstacleAvoidance_timer++; // time since last obstacle avoidance
-      
-      
-       //m_pcWheels->SetLinearVelocity(m_fWheelVelocity,m_fWheelVelocity);
-       
-   }
-*/
- SetWheelSpeedsFromVector(GetSwarmVelocity()); // Starts the flocking process
+  float distanceToGoal = getDistanceToGoal(m_pcPosSens);
 
+  if(distanceToGoal <= 0.2)
+  {
+    // std::clog << "Reached Goal @ "<< tickCounter << std::endl;
+    // argos::LOGERR << "Reached Goal!!!! @ "<< tickCounter << std::endl;
+    reachedGoal = 1;
+    num_robots_task_completed++;
+    std::clog << num_robots_task_completed << " Epucks at Beacon" << std::endl;
+  }
+
+  tickCounter ++;
+
+  // Failure case 1, 3
+  if (is_wheels_failed)
+  {
+    this->SetLinearVelocity(0.0f, 0.0f);
+  }
+
+  // Failure case 1, 2
+  if (is_lights_sensor_failed &&  is_range_bearing_failed &&  is_proximity_sensor_failed)
+  {
+    return;
+  }
+
+  int beaconVisible = checkBeaconVisibility(m_pcLightSens);
+  float repulsionThreshold;
+  CVector2 vectorToNearestBot = getVectorToNearestBot(m_pcRABSens);
+  float distanceToNearestBot = vectorToNearestBot.Length();
+  float radiansToNearestBot = vectorToNearestBot.Angle().GetValue();
+  
+
+  if(beaconVisible == 1){
+    repulsionThreshold = 9;
+  }else{
+    repulsionThreshold = 7; //change later for beacon taxi
+  }
+
+  //If the bot is getting too close to the obstacle, avoid it.
+  if(distanceToNearestBot < repulsionThreshold){
+
+    //If the nearest bot is between 90' and -90' relative to the bot, avoid.
+    //Only care about obstacles near the front half of the bot.
+    if(abs(radiansToNearestBot) < M_PI/2){
+
+      obstacleAvoidance_timer = 0; // timer stays 0 until we stop avoiding an object
+
+      //If radians are negative: the obstacle is to the right, turn left.
+      if(radiansToNearestBot<0){
+
+        this->SetLinearVelocity(0.0f, m_fWheelVelocity);
+      }
+      //Else the obstacle is to the left, turn right.
+      else{
+
+        this->SetLinearVelocity(m_fWheelVelocity, 0.0f);
+      }
+    }
+  }else{
+
+    obstacleAvoidance_timer++; // time since last obstacle avoidance
+
+    float threshold = 2.5; //controls overall swarm density, article  sets to 2.5
+    // threshold *= 10; //Multiply by 10 ticks/seconds so threshold equals 2.5 seconds.
+
+    if(obstacleAvoidance_timer > threshold){
+
+      SetWheelSpeedsFromVector(getVectorToSwarm(m_pcRABSens)); // Starts the flocking process
+
+    }else{
+
+      this->SetLinearVelocity(m_fWheelVelocity, m_fWheelVelocity); //Keep going straight
+    }
+  } 
 }
+
+/*************************************************************************************************************/
+/* This function resets the controller to its state right after the Init()
+/*************************************************************************************************************/
+void CEPuckbrownian::Reset()
+{
+  obstacleAvoidance_timer = 0;
+  tickCounter = 0;
+  reachedGoal = 0;
+  beaconVisible = 0;
+  is_wheels_failed = false;
+  is_lights_sensor_failed = false;
+  is_range_bearing_failed = false;
+  is_proximity_sensor_failed = false;
+}
+
 
 /*************************************************************************************************************/
 /*  Returns a vector that represents the required velocity to reach the swarms center from an inital position*/
@@ -192,25 +408,26 @@ void CEPuckbrownian::ControlStep()
 CVector2 CEPuckbrownian::GetSwarmVelocity()
 {
   
-  float x = m_pcPosSens->GetReading().Position.GetX();
-  float y = m_pcPosSens->GetReading().Position.GetY();
+  // float x = m_pcPosSens->GetReading().Position.GetX();
+  // float y = m_pcPosSens->GetReading().Position.GetY();
 
 
-  CVector2 swarmPosition;
-  CVector2 currentPosition;
-  CVector2 desiredPosition;
-  CVector2 current_WheelVelocity;
+  // CVector2 swarmPosition;
+  // CVector2 currentPosition;
+  // CVector2 desiredPosition;
+  // CVector2 current_WheelVelocity;
+  // float radiansToSwarmCenter = getRadiansToSwarmCenter(m_pcRABSens);
 
-  swarmPosition = CVector2(cos(getRadiansToSwarmCenter(m_pcRABSens)),sin(getRadiansToSwarmCenter(m_pcRABSens))); 
-  currentPosition = CVector2(x,y);
-  current_WheelVelocity = CVector2(m_fWheelVelocity,m_fWheelVelocity);
+  // swarmPosition = CVector2(cos(radiansToSwarmCenter),sin(radiansToSwarmCenter)); 
+  // currentPosition = CVector2(x,y);
+  // current_WheelVelocity = CVector2(m_fWheelVelocity,m_fWheelVelocity);
 
-  swarmPosition -= currentPosition; /* postion of swarms center relative to a epucks positions i.e gives us our "desired position" */
+  // swarmPosition -= currentPosition; /* postion of swarms center relative to a epucks positions i.e gives us our "desired position" */
   
-  swarmPosition -= current_WheelVelocity; /* velocity needed to reach swarm */
+  // swarmPosition -= current_WheelVelocity; /* velocity needed to reach swarm */
 
 
-  return swarmPosition;
+  // return swarmPosition;
    
 }
 
@@ -218,24 +435,8 @@ CVector2 CEPuckbrownian::GetSwarmVelocity()
 /* Adjust the wheel speed of the epucks so it not only turns to the direction of the swarms center but           */
 /* it also accelerates at a speed precise speed so the epucks will keep a good distancew(short range reuplsion)  */
 /*****************************************************************************************************************/
-void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading) 
-{
-  float threshold = 2.5; //controls overall swarm density, article  sets to 2.5
-
-  float number_of_robots = 10;//robots in the simulation
-
-  float coherence = number_of_robots * (obstacleAvoidance_timer/1000); // the 'w' variable from the w-algorithm
-  
-  float x_speed = c_heading.GetX();
-  float y_speed = c_heading.GetY();
-
-   /*
-  if(coherence > threshold)
-   {
-     m_pcWheels->SetLinearVelocity(x_speed ,y_speed);
-   }
-*/
- /* Get the heading angle */
+void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading) {
+   /* Get the heading angle */
    CRadians cHeadingAngle = c_heading.Angle().SignedNormalize();
    /* Get the length of the heading vector */
    Real fHeadingLength = c_heading.Length();
@@ -296,7 +497,7 @@ void CEPuckbrownian::SetWheelSpeedsFromVector(const CVector2& c_heading)
       fRightWheelSpeed = fSpeed1;
    }
    /* Finally, set the wheel speeds */
-   m_pcWheels->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
+   this->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
 }
 /*********************************************************************************************/
 /*********************************************************************************************/
